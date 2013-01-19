@@ -1,0 +1,16 @@
+name: RedeemMe
+main: to.joe.redeem.RedeemMe
+version: '${project.version}'
+website: http://joe.to
+author: Eviltechie
+description: Delivers items
+softdepend: [Vault]
+commands:
+  redeem:
+    description: Redeem items or coupons
+    usage: /redeem
+    permission: j2mc.redemption.redeem
+    permission-message: No soup for you
+permissions:
+  j2mc.redemption.redeem:
+    description: Redeem items or coupons
