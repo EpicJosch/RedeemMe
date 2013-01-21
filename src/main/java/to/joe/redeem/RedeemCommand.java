@@ -62,7 +62,7 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
                     sender.sendMessage(ChatColor.RED + "You have nothing to redeem");
                 }
             } catch (SQLException e) {
-                this.plugin.getLogger().log(Level.SEVERE, "Error getting list of things to redeem1", e);
+                this.plugin.getLogger().log(Level.SEVERE, "Error getting list of things to redeem!", e);
                 sender.sendMessage(ChatColor.RED + "Something went wrong!");
             }
             return true;

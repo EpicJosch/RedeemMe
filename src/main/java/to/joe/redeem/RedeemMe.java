@@ -1,6 +1,8 @@
 package to.joe.redeem;
 
 import java.sql.SQLException;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -17,6 +19,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -28,11 +31,8 @@ public class RedeemMe extends JavaPlugin implements Listener {
 
     /*
      * TODO Coupon codes that can be used by everybody once
-     * TODO Coupon items
      * TODO php script
      * TODO API
-     * TODO Alert users to unclaimed packages
-     * TODO Extra alert when packages are close to expiry
      */
 
     private MySQL sql; //TODO Possibly make this and the getter static so that an api can be easy
@@ -80,6 +80,42 @@ public class RedeemMe extends JavaPlugin implements Listener {
 
     public MySQL getMySQL() {
         return sql;
+    }
+    
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        try {
+            LinkedHashMap<Integer, String> packages = Coupon.getAvailablePackagesByName(player.getName());
+            Iterator<Entry<Integer, String>> iterator = packages.entrySet().iterator();
+            if (iterator.hasNext()) {
+                player.sendMessage(ChatColor.GREEN + "You have the following packages to redeem");
+                StringBuilder thisServer = new StringBuilder(ChatColor.YELLOW + "This server: ");
+                boolean packThisServer = false;
+                StringBuilder otherServers = new StringBuilder(ChatColor.RED + "Other servers: ");
+                boolean packOtherServers = false;
+                do {
+                    Entry<Integer, String> pack = iterator.next();
+                    if (pack.getValue() == null || pack.getValue().equals(getServer().getServerId())) {
+                        thisServer.append(pack.getKey()).append(", ");
+                        packThisServer = true;
+                    } else {
+                        otherServers.append(pack.getKey()).append(", ");
+                        packOtherServers = true;
+                    }
+                } while (iterator.hasNext());
+                if (packThisServer) {
+                    player.sendMessage(thisServer.substring(0, thisServer.length() - 2));
+                }
+                if (packOtherServers) {
+                    player.sendMessage(otherServers.substring(0, otherServers.length() - 2));
+                }
+                player.sendMessage(ChatColor.GREEN + "Type /redeem for help");
+            }
+        } catch (SQLException e) {
+            getLogger().log(Level.SEVERE, "Error getting list of things to redeem1", e);
+            player.sendMessage(ChatColor.RED + "Something went wrong!");
+        }
     }
     
     @EventHandler
