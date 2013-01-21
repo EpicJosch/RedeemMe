@@ -4,13 +4,15 @@ version: '${project.version}'
 website: http://joe.to
 author: Eviltechie
 description: Delivers items
-softdepend: [Vault]
+softdepend: [Vault, StrangeWeapons]
 commands:
   redeem:
     description: Redeem items or coupons
     usage: /redeem
     permission: j2mc.redemption.redeem
     permission-message: No soup for you
+  printcoupon:
+    usage: /printcoupon
 permissions:
   j2mc.redemption.redeem:
     description: Redeem items or coupons

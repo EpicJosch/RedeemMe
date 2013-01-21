@@ -51,6 +51,7 @@ public class RedeemMe extends JavaPlugin {
         saveConfig();
 
         getCommand("redeem").setExecutor(new RedeemCommand(this));
+        getCommand("printcoupon").setExecutor(new PrintCouponCommand(this));
 
         try {
             sql = new MySQL(this, getConfig().getString("database.url"), getConfig().getString("database.username"), getConfig().getString("database.password"));
@@ -60,10 +61,16 @@ public class RedeemMe extends JavaPlugin {
             return;
         }
         
+        Coupon.plugin = this;
+        
         if (setupEconomy()) {
             getLogger().info("Economy detected, money enabled");
         } else {
             getLogger().info("Economy not detected, money disabled");
+        }
+        
+        if (getServer().getServerId().equals("unnamed")) {
+            getLogger().warning("This server does not have an ID set!"); //TODO show where to set this
         }
     }
 

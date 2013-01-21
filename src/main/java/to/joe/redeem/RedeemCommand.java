@@ -14,6 +14,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import to.joe.strangeweapons.meta.StrangeWeapon;
+
 public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
 
     private RedeemMe plugin;
@@ -124,11 +126,11 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
             }
             return true;
         }
-        /*
+
         if (args.length == 2 && args[0].equalsIgnoreCase("coupon")) {
             try {
                 PreparedStatement ps = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM coupons WHERE player IS NULL AND code LIKE ? AND (expiry > ? OR expiry IS NULL) AND (? > embargo OR embargo IS NULL) AND (server = ? OR server IS NULL) AND redeemed IS NULL");
-                ps.setString(1, args[1].replaceAll("'", ""));
+                ps.setString(1, args[1].replaceAll("-", ""));
                 ps.setLong(2, System.currentTimeMillis() / 1000L);
                 ps.setLong(3, System.currentTimeMillis() / 1000L);
                 ps.setString(4, plugin.getServer().getServerId());
@@ -137,17 +139,54 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
                     PreparedStatement ps2 = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM couponitems WHERE id = ?");
                     ps2.setInt(1, rs.getInt("id"));
                     ResultSet rs2 = ps2.executeQuery();
-                    if (rs2.next()) {
+                    PreparedStatement ps3 = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM couponcommands WHERE id = ?");
+                    ps3.setInt(1, rs.getInt("id"));
+                    ResultSet rs3 = ps3.executeQuery();
+                    boolean hasItems = rs2.next();
+                    boolean hasCommands = rs3.next();
+                    if (hasItems || hasCommands || rs.getDouble("money") != 0) {
                         sender.sendMessage(ChatColor.GREEN + "Redeeming coupon " + ChatColor.GOLD + args[1]);
-                        do {
-                            player.getInventory().addItem(new ItemStack(rs2.getInt("item"), rs2.getInt("quantity")));
-                            sender.sendMessage(ChatColor.GREEN + ""+ rs2.getInt("quantity") + "x " + ChatColor.GOLD + Material.getMaterial(rs2.getInt("item")));
-                        } while (rs2.next());
-                        PreparedStatement ps3 = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("UPDATE coupons SET player = ?, redeemed = ? WHERE id = ?");
-                        ps3.setString(1, player.getName());
-                        ps3.setLong(2, System.currentTimeMillis() / 1000L);
-                        ps3.setInt(3, rs.getInt("id"));
-                        ps3.execute();
+                        if (rs.getDouble("money") != 0) {
+                            sender.sendMessage(ChatColor.GREEN + "" + rs.getDouble("money") + " " + ChatColor.GOLD + RedeemMe.economy.currencyNamePlural());
+                            RedeemMe.economy.depositPlayer(player.getName(), rs.getDouble("money"));
+                        }
+                        if (hasItems) {
+                            do {
+                                YamlConfiguration config = new YamlConfiguration();
+                                try {
+                                    config.loadFromString(rs2.getString("item"));
+                                } catch (InvalidConfigurationException e) {
+                                    sender.sendMessage(ChatColor.RED + "Data for id " + args[1] + " is corrupted!");
+                                    return true;
+                                }
+                                ItemStack item = config.getItemStack("item");
+                                if (StrangeWeapon.isStrangeWeapon(item)) {
+                                    item = new StrangeWeapon(item).clone();
+                                }
+                                if (item.getItemMeta().hasDisplayName()) {
+                                    sender.sendMessage(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getItemMeta().getDisplayName());
+                                } else {
+                                    sender.sendMessage(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType().toString());
+                                }
+                                player.getInventory().addItem(item);
+                            } while (rs2.next());
+                        }
+                        if (hasCommands) {
+                            do {
+                                CommandSender actor = sender;
+                                if (rs3.getBoolean("console")) {
+                                    actor = player.getServer().getConsoleSender();
+                                }
+                                String commandLine = rs3.getString("command").replaceAll("<player>", player.getName());
+                                sender.sendMessage(ChatColor.GREEN + "Command: " + ChatColor.GOLD + commandLine);
+                                plugin.getServer().dispatchCommand(actor, commandLine);
+                            } while (rs3.next());
+                        }
+                        PreparedStatement ps4 = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("UPDATE coupons SET player = ?, redeemed = ? WHERE id = ?");
+                        ps4.setString(1, player.getName());
+                        ps4.setLong(2, System.currentTimeMillis() / 1000L);
+                        ps4.setInt(3, rs.getInt("id"));
+                        ps4.execute();
                         this.plugin.getLogger().info(player.getName() + " has redeemed coupon with id " + rs.getInt("id"));
                         sender.sendMessage(ChatColor.GREEN + "Coupon successfully redeemed!");
                     }
@@ -159,7 +198,6 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
             }
             return true;
         }
-        */
 
         if (args.length == 1) {
             try {
@@ -195,6 +233,9 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
                                     return true;
                                 }
                                 ItemStack item = config.getItemStack("item");
+                                if (StrangeWeapon.isStrangeWeapon(item)) {
+                                    item = new StrangeWeapon(item).clone();
+                                }
                                 if (item.getItemMeta().hasDisplayName()) {
                                     sender.sendMessage(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getItemMeta().getDisplayName());
                                 } else {
@@ -232,10 +273,10 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
             return true;
         }
 
-        sender.sendMessage(ChatColor.RED + "/redeem list -> shows a list of packages you may redeem");
-        sender.sendMessage(ChatColor.RED + "/redeem details <number> -> shows a list of items in each package");
-        sender.sendMessage(ChatColor.RED + "/redeem coupon <code> -> redeems a coupon");
-        sender.sendMessage(ChatColor.RED + "/redeem <number> -> redeems a package");
+        sender.sendMessage(ChatColor.RED + "/redeem list -> shows a list of packages you may redeem"); //Get list of packages on this server. Get list of packages on other servers. Maybe get list of future packages.
+        sender.sendMessage(ChatColor.RED + "/redeem details <number> -> shows a list of items in each package"); //Get package by id
+        sender.sendMessage(ChatColor.RED + "/redeem coupon <code> -> redeems a coupon"); //Get package by code
+        sender.sendMessage(ChatColor.RED + "/redeem <number> -> redeems a package"); //Get package by id, update package by id
         return true;
     }
 }
