@@ -51,11 +51,14 @@ public class Coupon {
         return rs.getInt("id");
     }
 
-    public Coupon(int id) throws InvalidConfigurationException, SQLException { //From id
+    public Coupon(int id) throws InvalidConfigurationException, SQLException, NonexistentCouponException { //From id
+        this.id = id;
         PreparedStatement ps = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM coupons WHERE id = ?");
         ps.setInt(1, id);
         ResultSet rs = ps.executeQuery();
-        rs.next();
+        if (!rs.next()) {
+            throw new NonexistentCouponException();
+        }
         name = rs.getString("name");
         description = rs.getString("description");
         creator = rs.getString("creator");
@@ -90,5 +93,73 @@ public class Coupon {
         while (rs3.next()) {
             commands.put(rs3.getString("command"), rs3.getBoolean("console"));
         }
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getPlayer() {
+        return player;
+    }
+
+    public Double getMoney() {
+        return money;
+    }
+
+    public Long getRedeemed() {
+        return redeemed;
+    }
+
+    public Long getEmbargo() {
+        return embargo;
+    }
+
+    public Long getExpiry() {
+        return expiry;
+    }
+
+    public String getServer() {
+        return server;
+    }
+
+    public List<ItemStack> getItems() {
+        return items;
+    }
+
+    public LinkedHashMap<String, Boolean> getCommands() {
+        return commands;
+    }
+    
+    public class NonexistentCouponException extends Exception {
+        private static final long serialVersionUID = 1L;
+    }
+    
+    public boolean isEmpty() {
+        return getMoney() != null | !getItems().isEmpty() | !getCommands().isEmpty();
+    }
+    
+    public void setRedeemed(String player) throws SQLException {
+        PreparedStatement ps = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("UPDATE coupons SET player = ?, redeemed = ? WHERE id = ?");
+        ps.setString(1, player);
+        ps.setLong(2, System.currentTimeMillis() / 1000L);
+        ps.setInt(3, id);
+        ps.execute();
     }
 }
