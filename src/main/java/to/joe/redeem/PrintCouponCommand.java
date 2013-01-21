@@ -1,9 +1,8 @@
 package to.joe.redeem;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 
 import org.bukkit.ChatColor;
@@ -12,12 +11,9 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-
-import to.joe.strangeweapons.meta.StrangeWeapon;
 
 public class PrintCouponCommand implements CommandExecutor {
     
@@ -34,90 +30,74 @@ public class PrintCouponCommand implements CommandExecutor {
         }
         Player player = (Player) sender;
         
-        if (args.length > 0) {
-            ItemStack coupon = new ItemStack(Material.PAPER);
-            ItemMeta couponMeta = coupon.getItemMeta();
-            List<String> lore = couponMeta.getLore();
-            try {
-                PreparedStatement ps = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM coupons WHERE player IS NULL AND code LIKE ? AND (expiry > ? OR expiry IS NULL) AND (? > embargo OR embargo IS NULL) AND (server = ? OR server IS NULL) AND redeemed IS NULL");
-                ps.setString(1, args[0].replaceAll("-", ""));
-                ps.setLong(2, System.currentTimeMillis() / 1000L);
-                ps.setLong(3, System.currentTimeMillis() / 1000L);
-                ps.setString(4, plugin.getServer().getServerId());
-                ResultSet rs = ps.executeQuery();
-                if (rs.next()) {
-                    PreparedStatement ps2 = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM couponitems WHERE id = ?");
-                    ps2.setInt(1, rs.getInt("id"));
-                    ResultSet rs2 = ps2.executeQuery();
-                    PreparedStatement ps3 = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM couponcommands WHERE id = ?");
-                    ps3.setInt(1, rs.getInt("id"));
-                    ResultSet rs3 = ps3.executeQuery();
-                    boolean hasItems = rs2.next();
-                    boolean hasCommands = rs3.next();
-                    if (hasItems || hasCommands || rs.getDouble("money") != 0) {
-                        if (rs.getString("name") != null) {
-                            couponMeta.setDisplayName(ChatColor.GREEN + "Coupon: " + ChatColor.YELLOW + rs.getString("name"));
-                        } else {
-                            couponMeta.setDisplayName(ChatColor.GREEN + "Coupon");
-                        }
-                        if (rs.getString("description") != null) {
-                            lore.add(ChatColor.GREEN + "Description: " + ChatColor.YELLOW + rs.getString("description"));
-                        }
-                        if (rs.getString("creator") != null) {
-                            lore.add(ChatColor.GREEN + "Given by: " + ChatColor.YELLOW + rs.getString("creator"));
-                        }
-                        sender.sendMessage(ChatColor.GREEN + "Printing coupon " + ChatColor.GOLD + args[1]);
-                        if (rs.getDouble("money") != 0) {
-                            lore.add(ChatColor.GREEN + "" + rs.getDouble("money") + " " + ChatColor.GOLD + RedeemMe.economy.currencyNamePlural());
-                        }
-                        if (hasItems) {
-                            do {
-                                YamlConfiguration config = new YamlConfiguration();
-                                try {
-                                    config.loadFromString(rs2.getString("item"));
-                                } catch (InvalidConfigurationException e) {
-                                    sender.sendMessage(ChatColor.RED + "Data for id " + args[1] + " is corrupted!");
-                                    return true;
-                                }
-                                ItemStack item = config.getItemStack("item");
-                                if (StrangeWeapon.isStrangeWeapon(item)) {
-                                    item = new StrangeWeapon(item).clone();
-                                }
-                                if (item.getItemMeta().hasDisplayName()) {
-                                    lore.add(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getItemMeta().getDisplayName());
-                                } else {
-                                    lore.add(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType().toString());
-                                }
-                            } while (rs2.next());
-                        }
-                        if (hasCommands) {
-                            do {
-                                String commandLine = rs3.getString("command");
-                                lore.add(ChatColor.GREEN + "Command: " + ChatColor.GOLD + commandLine);
-                            } while (rs3.next());
-                        }
-                        PreparedStatement ps4 = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("UPDATE coupons SET player = ?, redeemed = ? WHERE id = ?");
-                        ps4.setString(1, player.getName());
-                        ps4.setLong(2, System.currentTimeMillis() / 1000L);
-                        ps4.setInt(3, rs.getInt("id"));
-                        ps4.execute();
-                        this.plugin.getLogger().info(player.getName() + " has redeemed coupon with id " + rs.getInt("id"));
-                        sender.sendMessage(ChatColor.GREEN + "Coupon successfully redeemed!");
-                    }
-                } else {
-                    sender.sendMessage(ChatColor.RED + "That coupon code is not valid. It may have been redeemed already or may not exist.");
-                }
-            } catch (SQLException e) {
-                this.plugin.getLogger().log(Level.SEVERE, "Error redeeming coupon", e);
+        try {
+            ItemStack couponItem = new ItemStack(Material.PAPER);
+            ItemMeta meta = couponItem.getItemMeta();
+            ArrayList<String> lore = new ArrayList<String>();
+            int id = Coupon.idFromCode(args[0].replaceAll("-", ""));
+            Coupon coupon = new Coupon(id);
+            if (coupon.getRedeemed() != null) {
+                sender.sendMessage(ChatColor.RED + "This coupon has been redeemed already");
+                return true;
             }
-            coupon.setItemMeta(couponMeta);
-            player.getInventory().addItem(coupon);
+            if (coupon.getServer() != null && !coupon.getServer().equals(player.getServer().getServerId())) {
+                sender.sendMessage(ChatColor.RED + "This coupon is not valid on this server");
+                sender.sendMessage(ChatColor.RED + "It must be redeemed on " + coupon.getServer());
+                return true;
+            }
+            if (coupon.getName() == null) {
+                meta.setDisplayName(ChatColor.GREEN + "Coupon");
+            } else {
+                meta.setDisplayName(ChatColor.GREEN + "Coupon: " + ChatColor.YELLOW + coupon.getName());
+            }
+            if (coupon.getDescription() != null) {
+                lore.add(ChatColor.GREEN + "Description: " + ChatColor.YELLOW + coupon.getDescription());
+            }
+            if (coupon.getCreator() != null) {
+                lore.add(ChatColor.GREEN + "Given by: " + ChatColor.YELLOW + coupon.getCreator());
+            }
+            if (!coupon.isEmpty()) {
+                lore.add(ChatColor.GREEN + "This coupon contains the following item(s)");
+                if (coupon.getMoney() != null) {
+                    lore.add(ChatColor.GREEN + "" + coupon.getMoney() + " " + ChatColor.GOLD + RedeemMe.economy.currencyNamePlural());
+                }
+                if (!coupon.getItems().isEmpty()) {
+                    for (ItemStack item : coupon.getItems()) {
+                        if (item.getItemMeta().hasDisplayName()) {
+                            lore.add(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getItemMeta().getDisplayName());
+                        } else {
+                            lore.add(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType().toString());
+                        }
+                    }
+                }
+                if (!coupon.getCommands().isEmpty()) {
+                    for (Entry<String, Boolean> com : coupon.getCommands().entrySet()) {
+                        lore.add(ChatColor.GREEN + "Command: " + ChatColor.GOLD + com.getKey());
+                    }
+                }
+                lore.add(ChatColor.RED + "Coupon code " + args[0].toUpperCase());
+                sender.sendMessage(ChatColor.GREEN + "Printed coupon for " + args[0].toUpperCase());
+                meta.setLore(lore);
+                couponItem.setItemMeta(meta);
+                player.getInventory().addItem(couponItem);
+            } else {
+                sender.sendMessage(ChatColor.RED + "Coupon " + args[0] + " has nothing to redeem");
+            }
+        } catch (NumberFormatException e) {
+            sender.sendMessage(ChatColor.RED + "That's not a number!");
+            return true;
+        } catch (InvalidConfigurationException e) {
+            this.plugin.getLogger().log(Level.SEVERE, "Data for id " + args[0] + " is corrupted!", e);
+            sender.sendMessage(ChatColor.RED + "Something went wrong!");
+            return true;
+        } catch (SQLException e) {
+            this.plugin.getLogger().log(Level.SEVERE, "Error getting list of things to redeem!", e);
+            sender.sendMessage(ChatColor.RED + "Something went wrong!");
+            return true;
+        } catch (NonexistentCouponException e) {
+            sender.sendMessage(ChatColor.RED + "That coupon does not exist!");
             return true;
         }
-        
-        
-        
         return true;
-    }
-    
+    }   
 }

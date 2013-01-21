@@ -14,7 +14,6 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import to.joe.redeem.Coupon.NonexistentCouponException;
 import to.joe.strangeweapons.meta.StrangeWeapon;
 
 public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
@@ -44,7 +43,7 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
                     boolean packOtherServers = false;
                     do {
                         Entry<Integer, String> pack = iterator.next();
-                        if (pack.getValue().equals(plugin.getServer().getServerId())) {
+                        if (pack.getValue() == null || pack.getValue().equals(plugin.getServer().getServerId())) {
                             thisServer.append(pack.getKey()).append(", ");
                             packThisServer = true;
                         } else {
@@ -72,16 +71,21 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
         if (args.length == 2 && args[0].equalsIgnoreCase("details")) {
             try {
                 Coupon coupon = new Coupon(Integer.parseInt(args[1]));
-                if (coupon.getEmbargo() > System.currentTimeMillis() / 1000) {
+                if (!coupon.getPlayer().equals(player.getName())) {
+                    sender.sendMessage(ChatColor.RED + "This package is not owned by you");
+                    return true;
+                }
+                if (coupon.getRedeemed() != null) {
+                    sender.sendMessage(ChatColor.RED + "This package has been redeemed already");
+                    return true;
+                }
+                if (coupon.getEmbargo() != null && coupon.getEmbargo() > System.currentTimeMillis() / 1000) {
                     sender.sendMessage(ChatColor.RED + "This package is not yet valid");
                     return true;
                 }
-                if (coupon.getExpiry() < System.currentTimeMillis() / 1000) {
+                if (coupon.getExpiry() != null && coupon.getExpiry() < System.currentTimeMillis() / 1000) {
                     sender.sendMessage(ChatColor.RED + "This package has expired");
                     return true;
-                }
-                if (coupon.getServer() != null && !coupon.getServer().equals(player.getServer().getServerId())) {
-                    sender.sendMessage(ChatColor.RED + "This package is not valid on this server"); //TODO Maybe return here
                 }
                 if (coupon.getName() != null) {
                     sender.sendMessage(ChatColor.GREEN + "Name: " + ChatColor.YELLOW + coupon.getName());
@@ -108,9 +112,12 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
                     }
                     if (!coupon.getCommands().isEmpty()) {
                         for (String commandLine : coupon.getCommands().keySet()) {
-                            commandLine.replaceAll("<player>", player.getName());
-                            sender.sendMessage(ChatColor.GREEN + "Command: " + ChatColor.GOLD + commandLine);
+                            sender.sendMessage(ChatColor.GREEN + "Command: " + ChatColor.GOLD + commandLine.replaceAll("<player>", player.getName()));
                         }
+                    }
+                    if (coupon.getServer() != null && !coupon.getServer().equals(player.getServer().getServerId())) {
+                        sender.sendMessage(ChatColor.RED + "This package is not valid on this server");
+                        sender.sendMessage(ChatColor.RED + "It must be redeemed on " + coupon.getServer());
                     }
                 } else {
                     sender.sendMessage(ChatColor.RED + "ID " + Integer.parseInt(args[1]) + " has nothing to redeem");
@@ -137,16 +144,21 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
             try {
                 int id = Coupon.idFromCode(args[1].replaceAll("-", ""));
                 Coupon coupon = new Coupon(id);
-                if (coupon.getEmbargo() > System.currentTimeMillis() / 1000) {
+                if (coupon.getRedeemed() != null) {
+                    sender.sendMessage(ChatColor.RED + "This coupon has been redeemed already");
+                    return true;
+                }
+                if (coupon.getEmbargo() != null && coupon.getEmbargo() > System.currentTimeMillis() / 1000) {
                     sender.sendMessage(ChatColor.RED + "This coupon is not yet valid");
                     return true;
                 }
-                if (coupon.getExpiry() < System.currentTimeMillis() / 1000) {
+                if (coupon.getExpiry() != null && coupon.getExpiry() < System.currentTimeMillis() / 1000) {
                     sender.sendMessage(ChatColor.RED + "This coupon has expired");
                     return true;
                 }
                 if (coupon.getServer() != null && !coupon.getServer().equals(player.getServer().getServerId())) {
                     sender.sendMessage(ChatColor.RED + "This coupon is not valid on this server");
+                    sender.sendMessage(ChatColor.RED + "It must be redeemed on " + coupon.getServer());
                     return true;
                 }
                 if (coupon.getName() != null) {
@@ -159,7 +171,7 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
                     sender.sendMessage(ChatColor.GREEN + "Given by: " + ChatColor.YELLOW + coupon.getCreator());
                 }
                 if (!coupon.isEmpty()) {
-                    sender.sendMessage(ChatColor.GREEN + "ID " + Integer.parseInt(args[1]) + " contains the following item(s)");
+                    sender.sendMessage(ChatColor.GREEN + "Coupon " + args[1].toUpperCase() + " contains the following item(s)");
                     if (coupon.getMoney() != null) {
                         sender.sendMessage(ChatColor.GREEN + "" + coupon.getMoney() + " " + ChatColor.GOLD + RedeemMe.economy.currencyNamePlural());
                         RedeemMe.economy.depositPlayer(player.getName(), coupon.getMoney());
@@ -194,9 +206,6 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
                 } else {
                     sender.sendMessage(ChatColor.RED + "Coupon " + args[1] + " has nothing to redeem");
                 }
-            } catch (NumberFormatException e) {
-                sender.sendMessage(ChatColor.RED + "That's not a number!");
-                return true;
             } catch (InvalidConfigurationException e) {
                 this.plugin.getLogger().log(Level.SEVERE, "Data for id " + args[1] + " is corrupted!", e);
                 sender.sendMessage(ChatColor.RED + "Something went wrong!");
@@ -216,16 +225,25 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
             try {
                 int id = Integer.parseInt(args[0]);
                 Coupon coupon = new Coupon(id);
-                if (coupon.getEmbargo() > System.currentTimeMillis() / 1000) {
+                if (!coupon.getPlayer().equals(player.getName())) {
+                    sender.sendMessage(ChatColor.RED + "This package is not owned by you");
+                    return true;
+                }
+                if (coupon.getRedeemed() != null) {
+                    sender.sendMessage(ChatColor.RED + "This package has been redeemed already");
+                    return true;
+                }
+                if (coupon.getEmbargo() != null && coupon.getEmbargo() > System.currentTimeMillis() / 1000) {
                     sender.sendMessage(ChatColor.RED + "This package is not yet valid");
                     return true;
                 }
-                if (coupon.getExpiry() < System.currentTimeMillis() / 1000) {
+                if (coupon.getExpiry() != null && coupon.getExpiry() < System.currentTimeMillis() / 1000) {
                     sender.sendMessage(ChatColor.RED + "This package has expired");
                     return true;
                 }
                 if (coupon.getServer() != null && !coupon.getServer().equals(player.getServer().getServerId())) {
                     sender.sendMessage(ChatColor.RED + "This package is not valid on this server");
+                    sender.sendMessage(ChatColor.RED + "It must be redeemed on " + coupon.getServer());
                     return true;
                 }
                 if (coupon.getName() != null) {
