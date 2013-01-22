@@ -11,10 +11,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class MySQL {
-    
+
     private Connection conn;
     private RedeemMe plugin;
-    
+
     private void initTable(String table) throws SQLException {
         final ResultSet tableExists = conn.getMetaData().getTables(null, null, table, null);
         if (!tableExists.first()) {
@@ -31,7 +31,7 @@ public class MySQL {
             }
         }
     }
-    
+
     public MySQL(RedeemMe plugin, String url, String username, String password) throws SQLException {
         conn = DriverManager.getConnection(url, username, password);
         this.plugin = plugin;
@@ -39,7 +39,7 @@ public class MySQL {
         initTable("couponitems");
         initTable("couponcommands");
     }
-    
+
     public PreparedStatement getFreshPreparedStatementHotFromTheOven(String query) throws SQLException {
         return conn.prepareStatement(query);
     }

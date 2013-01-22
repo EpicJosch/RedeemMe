@@ -16,7 +16,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 public class PrintCouponCommand implements CommandExecutor {
-    
+
     private RedeemMe plugin;
 
     public PrintCouponCommand(RedeemMe plugin) {
@@ -29,7 +29,7 @@ public class PrintCouponCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.RED + "Only players may use this command");
         }
         Player player = (Player) sender;
-        
+
         try {
             ItemStack couponItem = new ItemStack(Material.PAPER);
             ItemMeta meta = couponItem.getItemMeta();
@@ -99,5 +99,5 @@ public class PrintCouponCommand implements CommandExecutor {
             return true;
         }
         return true;
-    }   
+    }
 }

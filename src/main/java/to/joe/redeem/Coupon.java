@@ -6,14 +6,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 
 public class Coupon {
-
-    static RedeemMe plugin;
 
     private int id;
     private String name = null;
@@ -32,7 +31,7 @@ public class Coupon {
 
     public static LinkedHashMap<Integer, String> getAvailablePackagesByName(String name) throws SQLException { //id, server
         LinkedHashMap<Integer, String> packages = new LinkedHashMap<Integer, String>();
-        PreparedStatement ps = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM coupons WHERE player = ? AND (expiry > ? OR expiry IS NULL) AND (? > embargo OR embargo IS NULL) AND redeemed IS NULL");
+        PreparedStatement ps = RedeemMe.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM coupons WHERE player = ? AND (expiry > ? OR expiry IS NULL) AND (? > embargo OR embargo IS NULL) AND redeemed IS NULL");
         ps.setString(1, name);
         ps.setLong(2, System.currentTimeMillis() / 1000L);
         ps.setLong(3, System.currentTimeMillis() / 1000L);
@@ -44,7 +43,7 @@ public class Coupon {
     }
 
     public static int idFromCode(String code) throws SQLException, NonexistentCouponException {
-        PreparedStatement ps = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM coupons WHERE code = ?");
+        PreparedStatement ps = RedeemMe.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM coupons WHERE code = ? AND player IS NULL");
         ps.setString(1, code.replaceAll("-", ""));
         ResultSet rs = ps.executeQuery();
         if (rs.next()) {
@@ -56,7 +55,7 @@ public class Coupon {
 
     public Coupon(int id) throws InvalidConfigurationException, SQLException, NonexistentCouponException { //From id
         this.id = id;
-        PreparedStatement ps = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM coupons WHERE id = ?");
+        PreparedStatement ps = RedeemMe.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM coupons WHERE id = ?");
         ps.setInt(1, id);
         ResultSet rs = ps.executeQuery();
         if (!rs.next()) {
@@ -81,7 +80,7 @@ public class Coupon {
         }
         server = rs.getString("server");
 
-        PreparedStatement ps2 = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM couponitems WHERE id = ?");
+        PreparedStatement ps2 = RedeemMe.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM couponitems WHERE id = ?");
         ps2.setInt(1, rs.getInt("id"));
         ResultSet rs2 = ps2.executeQuery();
         while (rs2.next()) {
@@ -90,7 +89,7 @@ public class Coupon {
             items.add(config.getItemStack("item"));
         }
 
-        PreparedStatement ps3 = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM couponcommands WHERE id = ?");
+        PreparedStatement ps3 = RedeemMe.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM couponcommands WHERE id = ?");
         ps3.setInt(1, rs.getInt("id"));
         ResultSet rs3 = ps3.executeQuery();
         while (rs3.next()) {
@@ -155,10 +154,20 @@ public class Coupon {
     }
 
     public void setRedeemed(String player) throws SQLException {
-        PreparedStatement ps = plugin.getMySQL().getFreshPreparedStatementHotFromTheOven("UPDATE coupons SET player = ?, redeemed = ? WHERE id = ?");
-        ps.setString(1, player);
-        ps.setLong(2, System.currentTimeMillis() / 1000L);
-        ps.setInt(3, id);
-        ps.execute();
+        if (player.equals("*")) {
+            int id = RedeemAPI.newCoupon(name, description, creator, code, player, money, embargo, expiry, server);
+            for (ItemStack item : items) {
+                RedeemAPI.addItem(id, item);
+            }
+            for (Entry<String, Boolean> command : commands.entrySet()) {
+                RedeemAPI.addCommand(id, command.getKey(), command.getValue());
+            }
+        } else {
+            PreparedStatement ps = RedeemMe.getMySQL().getFreshPreparedStatementHotFromTheOven("UPDATE coupons SET player = ?, redeemed = ? WHERE id = ?");
+            ps.setString(1, player);
+            ps.setLong(2, System.currentTimeMillis() / 1000L);
+            ps.setInt(3, id);
+            ps.execute();
+        }
     }
 }

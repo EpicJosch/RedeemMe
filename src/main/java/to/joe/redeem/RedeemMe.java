@@ -32,11 +32,11 @@ public class RedeemMe extends JavaPlugin implements Listener {
     /*
      * TODO Coupon codes that can be used by everybody once
      * TODO php script
-     * TODO API
      */
 
-    private MySQL sql; //TODO Possibly make this and the getter static so that an api can be easy
-    public static Economy economy = null;
+    private static MySQL sql;
+    static Economy economy = null;
+    private static boolean strangeWeaponsEnabled = false; 
 
     private boolean setupEconomy() {
         RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
@@ -54,7 +54,7 @@ public class RedeemMe extends JavaPlugin implements Listener {
 
         getCommand("redeem").setExecutor(new RedeemCommand(this));
         getCommand("printcoupon").setExecutor(new PrintCouponCommand(this));
-        
+
         getServer().getPluginManager().registerEvents(this, this);
 
         try {
@@ -64,24 +64,34 @@ public class RedeemMe extends JavaPlugin implements Listener {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
-        
-        Coupon.plugin = this;
-        
+
         if (setupEconomy()) {
             getLogger().info("Economy detected, money enabled");
         } else {
             getLogger().info("Economy not detected, money disabled");
         }
         
+        if (getServer().getPluginManager().isPluginEnabled("StrangeWeapons")) {
+            getLogger().info("StrangeWeapons detected. Weapons will be cloned.");
+            strangeWeaponsEnabled = true;
+        } else {
+            getLogger().info("StrangeWeapons not detected. Weapons will not be cloned.");
+        }
+
         if (getServer().getServerId().equals("unnamed")) {
-            getLogger().warning("This server does not have an ID set!"); //TODO show where to set this
+            getLogger().warning("This server does not have an ID set!");
+            getLogger().warning("Set \"server-id\" in your server.properties");
         }
     }
 
-    public MySQL getMySQL() {
+    static MySQL getMySQL() {
         return sql;
     }
     
+    static boolean strangeWeaponsEnabled() {
+        return strangeWeaponsEnabled;
+    }
+
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
@@ -117,13 +127,13 @@ public class RedeemMe extends JavaPlugin implements Listener {
             player.sendMessage(ChatColor.RED + "Something went wrong!");
         }
     }
-    
+
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         if ((event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) && event.getItem() != null && event.getItem().getType().equals(Material.PAPER) && event.getItem().hasItemMeta()) {
             ItemMeta meta = event.getItem().getItemMeta();
             Pattern p = Pattern.compile(ChatColor.RED + "Coupon code (.*)");
-            Matcher m = p.matcher(meta.getLore().get(meta.getLore().size()-1));
+            Matcher m = p.matcher(meta.getLore().get(meta.getLore().size() - 1));
             if (m.matches()) {
                 Player player = event.getPlayer();
                 try {
@@ -171,7 +181,7 @@ public class RedeemMe extends JavaPlugin implements Listener {
                                 } else {
                                     player.sendMessage(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType().toString());
                                 }
-                                if (StrangeWeapon.isStrangeWeapon(item)) {
+                                if (strangeWeaponsEnabled() && StrangeWeapon.isStrangeWeapon(item)) {
                                     item = new StrangeWeapon(item).clone();
                                 }
                                 player.getInventory().addItem(item);

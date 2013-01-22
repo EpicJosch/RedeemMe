@@ -183,7 +183,7 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
                             } else {
                                 sender.sendMessage(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType().toString());
                             }
-                            if (StrangeWeapon.isStrangeWeapon(item)) {
+                            if (RedeemMe.strangeWeaponsEnabled() && StrangeWeapon.isStrangeWeapon(item)) {
                                 item = new StrangeWeapon(item).clone();
                             }
                             player.getInventory().addItem(item);
@@ -268,7 +268,7 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
                             } else {
                                 sender.sendMessage(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType().toString());
                             }
-                            if (StrangeWeapon.isStrangeWeapon(item)) {
+                            if (RedeemMe.strangeWeaponsEnabled() && StrangeWeapon.isStrangeWeapon(item)) {
                                 item = new StrangeWeapon(item).clone();
                             }
                             player.getInventory().addItem(item);
