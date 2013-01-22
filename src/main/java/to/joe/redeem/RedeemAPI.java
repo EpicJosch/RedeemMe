@@ -12,7 +12,7 @@ import org.bukkit.inventory.ItemStack;
 public class RedeemAPI {
 
     /**
-     * Creates a new coupon or package, depending on the paramaters specified
+     * Creates a new coupon or package, depending on the parameters specified
      * 
      * @param name
      *            The name for this coupon. Can be null.
@@ -27,16 +27,16 @@ public class RedeemAPI {
      * @param money
      *            The amount of currency the player will get this coupon is redeemed. Can be null.
      * @param embargo
-     *            The unix time that this coupon is not good before. Can be null.
+     *            The Unix time that this coupon is not good before. Can be null.
      * @param expiry
-     *            The unix time that this coupon is not good after. Can be null
+     *            The Unix time that this coupon is not good after. Can be null
      * @param server
      *            The server this coupon will be valid on. Set to null for all servers. Compared against {@link Server#getServerId()}
-     * @return The id of the newly inserted coupon. Use this id along wtih {@link RedeemAPI#addItem(int, ItemStack)} or {@link RedeemAPI#addCommand(int, String, boolean)} to add items or commands to the coupon.
+     * @return The id of the newly inserted coupon. Use this id along with {@link RedeemAPI#addItem(int, ItemStack)} or {@link RedeemAPI#addCommand(int, String, boolean)} to add items or commands to the coupon.
      * @throws SQLException
      */
     public static int newCoupon(String name, String description, String creator, String code, String player, Double money, Long embargo, Long expiry, String server) throws SQLException {
-        PreparedStatement ps = RedeemMe.getMySQL().getFreshPreparedStatementWithGeneratedKeys("INSERT INTO coupons (name, description, created, creator, code, player, money, embargo, expiry, server) VALUES (?,?,?,?,?,?,?,?,?,?");
+        PreparedStatement ps = RedeemMe.getMySQL().getFreshPreparedStatementWithGeneratedKeys("INSERT INTO coupons (name, description, created, creator, code, player, money, embargo, expiry, server) VALUES (?,?,?,?,?,?,?,?,?,?)");
         if (name == null) {
             ps.setNull(1, Types.VARCHAR);
         } else {
@@ -83,6 +83,7 @@ public class RedeemAPI {
         } else {
             ps.setString(10, server);
         }
+        System.out.println(ps.toString());
         ps.execute();
         ResultSet rs = ps.getGeneratedKeys();
         if (rs.next())

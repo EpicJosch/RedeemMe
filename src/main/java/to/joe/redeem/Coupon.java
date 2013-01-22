@@ -43,7 +43,7 @@ public class Coupon {
     }
 
     public static int idFromCode(String code) throws SQLException, NonexistentCouponException {
-        PreparedStatement ps = RedeemMe.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM coupons WHERE code = ? AND player IS NULL");
+        PreparedStatement ps = RedeemMe.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM coupons WHERE code = ? AND (player IS NULL OR player = '*')");
         ps.setString(1, code.replaceAll("-", ""));
         ResultSet rs = ps.executeQuery();
         if (rs.next()) {
@@ -154,7 +154,7 @@ public class Coupon {
     }
 
     public void setRedeemed(String player) throws SQLException {
-        if (player.equals("*")) {
+        if (this.player.equals("*")) {
             int id = RedeemAPI.newCoupon(name, description, creator, code, player, money, embargo, expiry, server);
             for (ItemStack item : items) {
                 RedeemAPI.addItem(id, item);
