@@ -10,6 +10,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 
 public class RedeemAPI {
+    
+    public static int newCode(String code, int couponId, int remaining) {
+        return 0;
+    }
 
     /**
      * Creates a new coupon or package, depending on the parameters specified
@@ -21,7 +25,7 @@ public class RedeemAPI {
      * @param creator
      *            The creator for this coupon. Can be null.
      * @param code
-     *            The coupon code for this coupon. This should be 15 alphanumeric characters. Set to null if you are creating a package instead.
+     *            The coupon code id that this coupon was redeemed with. TODO Clarify what this is
      * @param player
      *            The player this package will be owned by. Set to null if you are creating a coupon or "*" if you are creating a coupon that can be redeemed by more than one player.
      * @param money
@@ -35,7 +39,7 @@ public class RedeemAPI {
      * @return The id of the newly inserted coupon. Use this id along with {@link RedeemAPI#addItem(int, ItemStack)} or {@link RedeemAPI#addCommand(int, String, boolean)} to add items or commands to the coupon.
      * @throws SQLException
      */
-    public static int newCoupon(String name, String description, String creator, String code, String player, Double money, Long embargo, Long expiry, String server) throws SQLException {
+    public static int newCoupon(String name, String description, String creator, Integer code, String player, Double money, Long embargo, Long expiry, String server) throws SQLException {
         PreparedStatement ps = RedeemMe.getMySQL().getFreshPreparedStatementWithGeneratedKeys("INSERT INTO coupons (name, description, created, creator, code, player, money, embargo, expiry, server) VALUES (?,?,?,?,?,?,?,?,?,?)");
         if (name == null) {
             ps.setNull(1, Types.VARCHAR);
@@ -54,9 +58,9 @@ public class RedeemAPI {
             ps.setString(4, creator);
         }
         if (code == null) {
-            ps.setNull(5, Types.VARCHAR);
+            ps.setNull(5, Types.INTEGER);
         } else {
-            ps.setString(5, code);
+            ps.setInt(5, code);
         }
         if (player == null) {
             ps.setNull(6, Types.VARCHAR);

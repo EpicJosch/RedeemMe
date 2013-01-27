@@ -18,7 +18,7 @@ public class Coupon {
     private String name = null;
     private String description = null;
     private String creator = null;
-    private String code = null;
+    private Integer code = null;
     private String player = null;
     private Double money = null;
     private Long redeemed = null;
@@ -43,7 +43,7 @@ public class Coupon {
     }
 
     public static int idFromCode(String code) throws SQLException, NonexistentCouponException {
-        PreparedStatement ps = RedeemMe.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM coupons WHERE code = ? AND (player IS NULL OR player = '*')");
+        PreparedStatement ps = RedeemMe.getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM couponcodes WHERE code = ? AND (remaining > 0 OR remaining = -1)");
         ps.setString(1, code.replaceAll("-", ""));
         ResultSet rs = ps.executeQuery();
         if (rs.next()) {
@@ -64,19 +64,26 @@ public class Coupon {
         name = rs.getString("name");
         description = rs.getString("description");
         creator = rs.getString("creator");
-        code = rs.getString("code");
+        code = rs.getInt("code"); //TODO this needs to get the couponid, not the actual id
+        if (rs.wasNull()) {
+            code = null;
+        }
         player = rs.getString("player");
-        if (rs.getDouble("money") != 0) {
-            money = rs.getDouble("money");
+        money = rs.getDouble("money");
+        if (rs.wasNull()) {
+            money = null;
         }
-        if (rs.getLong("redeemed") != 0) {
-            redeemed = rs.getLong("redeemed");
+        redeemed = rs.getLong("redeemed");
+        if (rs.wasNull()) {
+            redeemed = null;
         }
-        if (rs.getLong("embargo") != 0) {
-            embargo = rs.getLong("embargo");
+        embargo = rs.getLong("embargo");
+        if (rs.wasNull()) {
+            embargo = null;
         }
-        if (rs.getLong("expiry") != 0) {
-            expiry = rs.getLong("expiry");
+        expiry = rs.getLong("expiry");
+        if (rs.wasNull()) {
+            expiry = null;
         }
         server = rs.getString("server");
 
@@ -113,7 +120,7 @@ public class Coupon {
         return creator;
     }
 
-    public String getCode() {
+    public Integer getCode() {
         return code;
     }
 

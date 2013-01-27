@@ -55,6 +55,7 @@
                     <include>coupons.sql</include>
                     <include>couponitems.sql</include>
                     <include>couponcommands.sql</include>
+                    <include>couponcodes.sql</include>
                 </includes>
             </resource>
         </resources>
