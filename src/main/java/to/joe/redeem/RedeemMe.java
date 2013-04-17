@@ -36,7 +36,7 @@ public class RedeemMe extends JavaPlugin implements Listener {
 
     private static MySQL sql;
     static Economy economy = null;
-    private static boolean strangeWeaponsEnabled = false; 
+    private static boolean strangeWeaponsEnabled = false;
 
     private boolean setupEconomy() {
         RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
@@ -70,12 +70,10 @@ public class RedeemMe extends JavaPlugin implements Listener {
         } else {
             getLogger().info("Economy not detected, money disabled");
         }
-        
+
         if (getServer().getPluginManager().isPluginEnabled("StrangeWeapons")) {
             getLogger().info("StrangeWeapons detected. Weapons will be cloned.");
             strangeWeaponsEnabled = true;
-        } else {
-            getLogger().info("StrangeWeapons not detected. Weapons will not be cloned.");
         }
 
         if (getServer().getServerId().equals("unnamed")) {
@@ -87,7 +85,7 @@ public class RedeemMe extends JavaPlugin implements Listener {
     static MySQL getMySQL() {
         return sql;
     }
-    
+
     static boolean strangeWeaponsEnabled() {
         return strangeWeaponsEnabled;
     }
@@ -101,23 +99,23 @@ public class RedeemMe extends JavaPlugin implements Listener {
             if (iterator.hasNext()) {
                 player.sendMessage(ChatColor.GREEN + "You have the following packages to redeem");
                 StringBuilder thisServer = new StringBuilder(ChatColor.YELLOW + "This server: ");
-                boolean packThisServer = false;
+                boolean packagesThisServer = false;
                 StringBuilder otherServers = new StringBuilder(ChatColor.RED + "Other servers: ");
-                boolean packOtherServers = false;
+                boolean packagesOtherServers = false;
                 do {
                     Entry<Integer, String> pack = iterator.next();
                     if (pack.getValue() == null || pack.getValue().equals(getServer().getServerId())) {
                         thisServer.append(pack.getKey()).append(", ");
-                        packThisServer = true;
+                        packagesThisServer = true;
                     } else {
                         otherServers.append(pack.getKey()).append(", ");
-                        packOtherServers = true;
+                        packagesOtherServers = true;
                     }
                 } while (iterator.hasNext());
-                if (packThisServer) {
+                if (packagesThisServer) {
                     player.sendMessage(thisServer.substring(0, thisServer.length() - 2));
                 }
-                if (packOtherServers) {
+                if (packagesOtherServers) {
                     player.sendMessage(otherServers.substring(0, otherServers.length() - 2));
                 }
                 player.sendMessage(ChatColor.GREEN + "Type /redeem for help");
