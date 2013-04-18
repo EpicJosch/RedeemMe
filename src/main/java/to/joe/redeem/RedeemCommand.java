@@ -144,7 +144,7 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
             try {
                 int id = Package.idFromCode(args[1].replaceAll("-", ""));
                 Package pack = new Package(id);
-                if (pack.getRedeemed() != null) {
+                if (pack.getRedeemed() != null || Package.hasAlreadyDropped(pack, player.getName())) {
                     sender.sendMessage(ChatColor.RED + "This coupon has been redeemed already");
                     return true;
                 }

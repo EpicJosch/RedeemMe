@@ -13,8 +13,9 @@ public class RDTestCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         try {
-            //new PackageBuilder().forPlayer("PlantAssassin").withName("Voting reward").withDescription("Thanks for voting!").withCreator("Senior Staph").withEmbargo(0).withExpiry(1866135254L).withItemStack(new ItemStack(Material.DIAMOND_SWORD)).withCommand("op <player>", true).build();
-            new PackageBuilder().withCode(new CouponCode(100)).withItemStack(new ItemStack(Material.DIAMOND_SWORD)).build();
+            new PackageBuilder().forPlayer("PlantAssassin").withName("Voting reward").withDescription("Thanks for voting!").withCreator("Senior Staph").withEmbargo(0).withExpiry(1866135254L).withItemStack(new ItemStack(Material.DIAMOND_SWORD)).withItemStack(new ItemStack(Material.BOOK_AND_QUILL)).withCommand("op <player>", true).withCommand("me says hi", false).build();
+            new PackageBuilder().withCode(new CouponCode(2)).withItemStack(new ItemStack(Material.DIAMOND_SWORD)).build();
+            new PackageBuilder().withName("Joke prize").withCode(new CouponCode(-1)).withItemStack(new ItemStack(Material.WOOD_SWORD)).build();
         } catch (SQLException e) {
             e.printStackTrace();
         }
