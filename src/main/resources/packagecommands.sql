@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `couponcommands` (
+CREATE TABLE IF NOT EXISTS `packagecommands` (
   `id` int(11) NOT NULL,
   `command` varchar(150) NOT NULL,
   `console` tinyint(1) NOT NULL DEFAULT '1',

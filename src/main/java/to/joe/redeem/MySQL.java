@@ -35,9 +35,10 @@ public class MySQL {
     public MySQL(RedeemMe plugin, String url, String username, String password) throws SQLException {
         conn = DriverManager.getConnection(url, username, password);
         this.plugin = plugin;
-        initTable("coupons");
-        initTable("couponitems");
-        initTable("couponcommands");
+        initTable("couponcodes");
+        initTable("packages");
+        initTable("packageitems");
+        initTable("packagecommands");
     }
 
     public PreparedStatement getFreshPreparedStatementHotFromTheOven(String query) throws SQLException {

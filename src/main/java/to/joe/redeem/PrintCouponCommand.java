@@ -34,35 +34,35 @@ public class PrintCouponCommand implements CommandExecutor {
             ItemStack couponItem = new ItemStack(Material.PAPER);
             ItemMeta meta = couponItem.getItemMeta();
             ArrayList<String> lore = new ArrayList<String>();
-            int id = Coupon.idFromCode(args[0].replaceAll("-", ""));
-            Coupon coupon = new Coupon(id);
-            if (coupon.getRedeemed() != null) {
+            int id = Package.idFromCode(args[0].replaceAll("-", ""));
+            Package pack = new Package(id);
+            if (pack.getRedeemed() != null) {
                 sender.sendMessage(ChatColor.RED + "This coupon has been redeemed already");
                 return true;
             }
-            if (coupon.getServer() != null && !coupon.getServer().equals(player.getServer().getServerId())) {
+            if (pack.getServer() != null && !pack.getServer().equals(player.getServer().getServerId())) {
                 sender.sendMessage(ChatColor.RED + "This coupon is not valid on this server");
-                sender.sendMessage(ChatColor.RED + "It must be redeemed on " + coupon.getServer());
+                sender.sendMessage(ChatColor.RED + "It must be redeemed on " + pack.getServer());
                 return true;
             }
-            if (coupon.getName() == null) {
+            if (pack.getName() == null) {
                 meta.setDisplayName(ChatColor.GREEN + "Coupon");
             } else {
-                meta.setDisplayName(ChatColor.GREEN + "Coupon: " + ChatColor.YELLOW + coupon.getName());
+                meta.setDisplayName(ChatColor.GREEN + "Coupon: " + ChatColor.YELLOW + pack.getName());
             }
-            if (coupon.getDescription() != null) {
-                lore.add(ChatColor.GREEN + "Description: " + ChatColor.YELLOW + coupon.getDescription());
+            if (pack.getDescription() != null) {
+                lore.add(ChatColor.GREEN + "Description: " + ChatColor.YELLOW + pack.getDescription());
             }
-            if (coupon.getCreator() != null) {
-                lore.add(ChatColor.GREEN + "Given by: " + ChatColor.YELLOW + coupon.getCreator());
+            if (pack.getCreator() != null) {
+                lore.add(ChatColor.GREEN + "Given by: " + ChatColor.YELLOW + pack.getCreator());
             }
-            if (!coupon.isEmpty()) {
+            if (!pack.isEmpty()) {
                 lore.add(ChatColor.GREEN + "This coupon contains the following item(s)");
-                if (coupon.getMoney() != null) {
-                    lore.add(ChatColor.GREEN + "" + coupon.getMoney() + " " + ChatColor.GOLD + RedeemMe.economy.currencyNamePlural());
+                if (pack.getMoney() != null) {
+                    lore.add(ChatColor.GREEN + "" + pack.getMoney() + " " + ChatColor.GOLD + RedeemMe.economy.currencyNamePlural());
                 }
-                if (!coupon.getItems().isEmpty()) {
-                    for (ItemStack item : coupon.getItems()) {
+                if (!pack.getItems().isEmpty()) {
+                    for (ItemStack item : pack.getItems()) {
                         if (item.getItemMeta().hasDisplayName()) {
                             lore.add(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getItemMeta().getDisplayName());
                         } else {
@@ -70,8 +70,8 @@ public class PrintCouponCommand implements CommandExecutor {
                         }
                     }
                 }
-                if (!coupon.getCommands().isEmpty()) {
-                    for (Entry<String, Boolean> com : coupon.getCommands().entrySet()) {
+                if (!pack.getCommands().isEmpty()) {
+                    for (Entry<String, Boolean> com : pack.getCommands().entrySet()) {
                         lore.add(ChatColor.GREEN + "Command: " + ChatColor.GOLD + com.getKey());
                     }
                 }

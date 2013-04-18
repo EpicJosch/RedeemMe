@@ -13,6 +13,9 @@ commands:
     permission-message: No soup for you
   printcoupon:
     usage: /printcoupon
+  rdtest:
+    usage: /<command>
 permissions:
   j2mc.redemption.redeem:
     description: Redeem items or coupons
+    default: true

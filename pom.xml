@@ -52,9 +52,9 @@
                 <includes>
                     <include>plugin.yml</include>
                     <include>config.yml</include>
-                    <include>coupons.sql</include>
-                    <include>couponitems.sql</include>
-                    <include>couponcommands.sql</include>
+                    <include>packages.sql</include>
+                    <include>packageitems.sql</include>
+                    <include>packagecommands.sql</include>
                     <include>couponcodes.sql</include>
                 </includes>
             </resource>
