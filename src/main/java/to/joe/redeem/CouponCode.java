@@ -50,6 +50,14 @@ public class CouponCode {
     }
 
     int getID() {
-        return id;
+        return this.id;
+    }
+
+    public String getCode() {
+        return this.code;
+    }
+
+    public int getRemaining() {
+        return this.remaining;
     }
 }

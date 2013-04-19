@@ -323,6 +323,9 @@ public class Package {
      * @throws SQLException
      */
     boolean hasAlreadyDropped(String player) throws SQLException {
+        if (this.code == null) {
+            return false;
+        }
         PreparedStatement ps = RedeemMe.getInstance().getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM packages WHERE code = ? AND player = ?");
         ps.setInt(1, this.code);
         ps.setString(2, player);

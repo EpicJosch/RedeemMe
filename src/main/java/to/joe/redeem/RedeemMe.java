@@ -1,8 +1,6 @@
 package to.joe.redeem;
 
 import java.sql.SQLException;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -98,36 +96,8 @@ public class RedeemMe extends JavaPlugin implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        try {
-            LinkedHashMap<Integer, String> packages = Package.getAvailablePackagesByPlayerName(player.getName());
-            Iterator<Entry<Integer, String>> iterator = packages.entrySet().iterator();
-            if (iterator.hasNext()) {
-                player.sendMessage(ChatColor.GREEN + "You have the following packages to redeem");
-                StringBuilder thisServer = new StringBuilder(ChatColor.YELLOW + "This server: ");
-                boolean packagesThisServer = false;
-                StringBuilder otherServers = new StringBuilder(ChatColor.RED + "Other servers: ");
-                boolean packagesOtherServers = false;
-                do {
-                    Entry<Integer, String> pack = iterator.next();
-                    if (pack.getValue() == null || pack.getValue().equals(getServer().getServerId())) {
-                        thisServer.append(pack.getKey()).append(", ");
-                        packagesThisServer = true;
-                    } else {
-                        otherServers.append(pack.getKey()).append(", ");
-                        packagesOtherServers = true;
-                    }
-                } while (iterator.hasNext());
-                if (packagesThisServer) {
-                    player.sendMessage(thisServer.substring(0, thisServer.length() - 2));
-                }
-                if (packagesOtherServers) {
-                    player.sendMessage(otherServers.substring(0, otherServers.length() - 2));
-                }
-                player.sendMessage(ChatColor.GREEN + "Type /redeem for help");
-            }
-        } catch (SQLException e) {
-            getLogger().log(Level.SEVERE, "Error getting list of things to redeem!", e);
-            player.sendMessage(ChatColor.RED + "Something went wrong!");
+        if (Redeem.listAvailable(player)) {
+            player.sendMessage(ChatColor.GREEN + "Type /redeem for help");
         }
     }
 
