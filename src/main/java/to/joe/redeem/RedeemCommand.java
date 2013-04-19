@@ -14,6 +14,7 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import to.joe.redeem.exception.NonexistentCouponException;
 import to.joe.strangeweapons.meta.StrangeWeapon;
 
 public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
@@ -144,7 +145,7 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
             try {
                 int id = Package.idFromCode(args[1].replaceAll("-", ""));
                 Package pack = new Package(id);
-                if (pack.getRedeemed() != null || Package.hasAlreadyDropped(pack, player.getName())) {
+                if (pack.getRedeemed() != null || pack.hasAlreadyDropped(player.getName())) {
                     sender.sendMessage(ChatColor.RED + "This coupon has been redeemed already");
                     return true;
                 }

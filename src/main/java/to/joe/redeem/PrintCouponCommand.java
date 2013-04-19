@@ -15,6 +15,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import to.joe.redeem.exception.NonexistentCouponException;
+
 public class PrintCouponCommand implements CommandExecutor {
 
     private RedeemMe plugin;
@@ -36,7 +38,7 @@ public class PrintCouponCommand implements CommandExecutor {
             ArrayList<String> lore = new ArrayList<String>();
             int id = Package.idFromCode(args[0].replaceAll("-", ""));
             Package pack = new Package(id);
-            if (pack.getRedeemed() != null) {
+            if (pack.getRedeemed() != null || pack.hasAlreadyDropped(player.getName())) {
                 sender.sendMessage(ChatColor.RED + "This coupon has been redeemed already");
                 return true;
             }

@@ -7,6 +7,8 @@ import java.util.List;
 
 import org.bukkit.inventory.ItemStack;
 
+import to.joe.redeem.exception.IncompletePackageException;
+
 public class PackageBuilder {
 
     private String name = null;
@@ -65,6 +67,9 @@ public class PackageBuilder {
      * @return
      */
     public PackageBuilder withCode(CouponCode code) {
+        if (this.player != null) {
+            throw new IncompletePackageException("Player or code already set");
+        }
         this.code = code.getID();
         this.player = "*";
         return this;
@@ -78,6 +83,12 @@ public class PackageBuilder {
      * @return
      */
     public PackageBuilder forPlayer(String player) {
+        if (this.player != null) {
+            throw new IncompletePackageException("Player or code already set");
+        }
+        if (!player.matches("[A-Za-z0-9_]{2,16}")) {
+            throw new IncompletePackageException("Player name not valid");
+        }
         this.player = player;
         return this;
     }
@@ -161,7 +172,13 @@ public class PackageBuilder {
      * 
      * @throws SQLException
      */
-    public Package build() throws SQLException { //TODO Make sure a code or player was given. TODO Make sure the package is not empty.
-        return new Package(this.name, this.description, this.creator, this.code, this.player, this.money, this.embargo, this.expiry, this.server, this.items, this.commands);
+    public void build() throws SQLException {
+        if (this.money == null && this.items.isEmpty() && this.commands.isEmpty()) {
+            throw new IncompletePackageException("Package is empty");
+        }
+        if (this.player == null) {
+            throw new IncompletePackageException("Player or code not set");
+        }
+        new Package(this.name, this.description, this.creator, this.code, this.player, this.money, this.embargo, this.expiry, this.server, this.items, this.commands);
     }
 }

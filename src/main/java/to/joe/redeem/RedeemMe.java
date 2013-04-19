@@ -25,6 +25,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import to.joe.redeem.exception.NonexistentCouponException;
 import to.joe.strangeweapons.meta.StrangeWeapon;
 
 public class RedeemMe extends JavaPlugin implements Listener {
@@ -141,7 +142,7 @@ public class RedeemMe extends JavaPlugin implements Listener {
                 try {
                     int id = Package.idFromCode(m.group(1).replaceAll("-", ""));
                     Package pack = new Package(id);
-                    if (pack.getRedeemed() != null) {
+                    if (pack.getRedeemed() != null || pack.hasAlreadyDropped(player.getName())) {
                         player.sendMessage(ChatColor.RED + "This coupon has been redeemed already");
                         player.setItemInHand(null);
                         return;

@@ -15,6 +15,8 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 
+import to.joe.redeem.exception.NonexistentCouponException;
+
 /**
  * Represents a package that can be assigned to a player directly or via a coupon code.
  * 
@@ -66,7 +68,7 @@ public class Package {
      * @throws SQLException
      * @throws NonexistentCouponException
      */
-    public static int idFromCode(String code) throws SQLException, NonexistentCouponException {
+    static int idFromCode(String code) throws SQLException, NonexistentCouponException {
         PreparedStatement ps = RedeemMe.getInstance().getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT id FROM packages WHERE code = (SELECT codeid FROM couponcodes WHERE code = ? AND (remaining > 0 OR remaining = -1))");
         ps.setString(1, code.replaceAll("-", ""));
         ResultSet rs = ps.executeQuery();
@@ -75,23 +77,6 @@ public class Package {
         } else {
             throw new NonexistentCouponException();
         }
-    }
-
-    /**
-     * Checks if the specified package has already been given through a coupon
-     * 
-     * @param pack
-     *            The package to check
-     * @param player
-     *            The player to check
-     * @return True if the package has already been given
-     * @throws SQLException
-     */
-    public static boolean hasAlreadyDropped(Package pack, String player) throws SQLException {
-        PreparedStatement ps = RedeemMe.getInstance().getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM packages WHERE code = ? AND player = ?");
-        ps.setInt(1, pack.getCode());
-        ps.setString(2, player);
-        return ps.executeQuery().next();
     }
 
     /**
@@ -325,5 +310,22 @@ public class Package {
         ps.setLong(1, System.currentTimeMillis() / 1000L);
         ps.setInt(2, newid);
         ps.execute();
+    }
+
+    /**
+     * Checks if the specified package has already been given through a coupon
+     * 
+     * @param pack
+     *            The package to check
+     * @param player
+     *            The player to check
+     * @return True if the package has already been given
+     * @throws SQLException
+     */
+    boolean hasAlreadyDropped(String player) throws SQLException {
+        PreparedStatement ps = RedeemMe.getInstance().getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM packages WHERE code = ? AND player = ?");
+        ps.setInt(1, this.code);
+        ps.setString(2, player);
+        return ps.executeQuery().next();
     }
 }
