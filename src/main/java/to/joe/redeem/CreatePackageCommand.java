@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.logging.Level;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -150,7 +151,9 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
                 Inventory inv = (Inventory) context.getSessionData("inventory");
                 PackageBuilder builder = ((PackageBuilder) context.getSessionData("builder"));
                 for (ItemStack item : inv.getContents()) {
-                    builder.withItemStack(item);
+                    if (item.getType() != Material.AIR) {
+                        builder.withItemStack(item);
+                    }
                 }
                 return new CommandPrompt();
             } else {
@@ -164,7 +167,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
         }
     }
 
-    private class CommandPrompt extends StringPrompt {
+    private class CommandPrompt extends StringPrompt {//TODO This needs perms! Otherwise an admin will be able to create a command that gives them more power!
 
         @Override
         public String getPromptText(ConversationContext context) {

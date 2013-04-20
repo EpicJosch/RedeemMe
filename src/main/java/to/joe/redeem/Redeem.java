@@ -51,7 +51,7 @@ public class Redeem {
         }
     }
 
-    static boolean details(Package pack, Player player, String type, boolean redeemPackage) throws SQLException {
+    static boolean details(Package pack, Player player, String type, boolean redeemPackage) throws SQLException { //TODO Make sure player has room in their inventory
         if (!pack.getPlayer().equals("*") && !pack.getPlayer().equals(player.getName())) {
             player.sendMessage(ChatColor.RED + "This " + type + " is not owned by you");
             return false;
