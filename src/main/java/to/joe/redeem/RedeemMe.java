@@ -1,7 +1,6 @@
 package to.joe.redeem;
 
 import java.sql.SQLException;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -10,7 +9,6 @@ import net.milkbowl.vault.economy.Economy;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,13 +16,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import to.joe.redeem.exception.NonexistentCouponException;
-import to.joe.strangeweapons.meta.StrangeWeapon;
 
 public class RedeemMe extends JavaPlugin implements Listener {
 
@@ -84,6 +80,7 @@ public class RedeemMe extends JavaPlugin implements Listener {
         getCommand("redeem").setExecutor(new RedeemCommand(this));
         getCommand("printcoupon").setExecutor(new PrintCouponCommand(this));
         getCommand("rdtest").setExecutor(new RDTestCommand());
+        getCommand("createpackage").setExecutor(new CreatePackageCommand(this));
         getServer().getPluginManager().registerEvents(this, this);
         instance = this;
     }
@@ -101,6 +98,7 @@ public class RedeemMe extends JavaPlugin implements Listener {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         if ((event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) && event.getItem() != null && event.getItem().getType().equals(Material.PAPER) && event.getItem().hasItemMeta()) {
@@ -112,71 +110,12 @@ public class RedeemMe extends JavaPlugin implements Listener {
                 try {
                     int id = Package.idFromCode(m.group(1).replaceAll("-", ""));
                     Package pack = new Package(id);
-                    if (pack.getRedeemed() != null || pack.hasAlreadyDropped(player.getName())) {
-                        player.sendMessage(ChatColor.RED + "This coupon has been redeemed already");
-                        player.setItemInHand(null);
-                        return;
-                    }
-                    if (pack.getEmbargo() != null && pack.getEmbargo() > System.currentTimeMillis() / 1000) {
-                        player.sendMessage(ChatColor.RED + "This coupon is not yet valid");
-                        return;
-                    }
-                    if (pack.getExpiry() != null && pack.getExpiry() < System.currentTimeMillis() / 1000) {
-                        player.sendMessage(ChatColor.RED + "This coupon has expired");
-                        player.setItemInHand(null);
-                        return;
-                    }
-                    if (pack.getServer() != null && !pack.getServer().equals(player.getServer().getServerId())) {
-                        player.sendMessage(ChatColor.RED + "This coupon is not valid on this server");
-                        player.sendMessage(ChatColor.RED + "It must be redeemed on " + pack.getServer());
-                        player.setItemInHand(null);
-                        return;
-                    }
-                    if (pack.getName() != null) {
-                        player.sendMessage(ChatColor.GREEN + "Name: " + ChatColor.YELLOW + pack.getName());
-                    }
-                    if (pack.getDescription() != null) {
-                        player.sendMessage(ChatColor.GREEN + "Description: " + ChatColor.YELLOW + pack.getDescription());
-                    }
-                    if (pack.getCreator() != null) {
-                        player.sendMessage(ChatColor.GREEN + "Given by: " + ChatColor.YELLOW + pack.getCreator());
-                    }
-                    if (!pack.isEmpty()) {
-                        player.sendMessage(ChatColor.GREEN + "Coupon " + m.group(1) + " contains the following item(s)");
-                        if (pack.getMoney() != null) {
-                            player.sendMessage(ChatColor.GREEN + "" + pack.getMoney() + " " + ChatColor.GOLD + RedeemMe.economy.currencyNamePlural());
-                            RedeemMe.economy.depositPlayer(player.getName(), pack.getMoney());
-                        }
-                        if (!pack.getItems().isEmpty()) {
-                            for (ItemStack item : pack.getItems()) {
-                                if (item.getItemMeta().hasDisplayName()) {
-                                    player.sendMessage(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getItemMeta().getDisplayName());
-                                } else {
-                                    player.sendMessage(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType().toString());
-                                }
-                                if (strangeWeaponsEnabled() && StrangeWeapon.isStrangeWeapon(item)) {
-                                    item = new StrangeWeapon(item).clone();
-                                }
-                                player.getInventory().addItem(item);
-                            }
-                        }
-                        if (!pack.getCommands().isEmpty()) {
-                            for (Entry<String, Boolean> com : pack.getCommands().entrySet()) {
-                                String commandLine = com.getKey().replaceAll("<player>", player.getName());
-                                player.sendMessage(ChatColor.GREEN + "Command: " + ChatColor.GOLD + commandLine);
-                                CommandSender actor = player;
-                                if (com.getValue()) {
-                                    actor = getServer().getConsoleSender();
-                                }
-                                getServer().dispatchCommand(actor, commandLine);
-                            }
-                        }
+                    if (Redeem.details(pack, player, "coupon", true)) {
                         pack.setRedeemed(player.getName());
                         getLogger().info(player.getName() + " has redeemed coupon with id " + id);
                         player.sendMessage(ChatColor.GREEN + "Coupon successfully redeemed!");
                         player.setItemInHand(null);
-                    } else {
-                        player.sendMessage(ChatColor.RED + "Coupon " + m.group(1) + " has nothing to redeem");
+                        player.updateInventory();
                     }
                 } catch (InvalidConfigurationException e) {
                     getLogger().log(Level.SEVERE, "Data for id " + m.group(1) + " is corrupted!", e);

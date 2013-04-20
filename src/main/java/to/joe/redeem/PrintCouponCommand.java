@@ -30,8 +30,11 @@ public class PrintCouponCommand implements CommandExecutor {
         if (!(sender instanceof Player)) {
             sender.sendMessage(ChatColor.RED + "Only players may use this command");
         }
+        if (args.length == 0) {
+            sender.sendMessage(ChatColor.RED + "Usage: /printcoupon <code>");
+            return true;
+        }
         Player player = (Player) sender;
-
         try {
             ItemStack couponItem = new ItemStack(Material.PAPER);
             ItemMeta meta = couponItem.getItemMeta();

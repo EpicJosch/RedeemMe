@@ -15,6 +15,8 @@ commands:
     usage: /printcoupon
   rdtest:
     usage: /<command>
+  createpackage:
+    usage: /<command>
 permissions:
   j2mc.redemption.redeem:
     description: Redeem items or coupons
