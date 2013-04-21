@@ -3,10 +3,10 @@ package to.joe.redeem;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.Level;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -26,7 +26,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-public class CreatePackageCommand implements CommandExecutor {//TODO Custom coupon codes TODO Inform user about <player> TODO Allow review before inserting
+public class CreatePackageCommand implements CommandExecutor {//TODO Custom coupon codes TODO Allow review before inserting
 
     private ConversationFactory factory;
     private RedeemMe plugin;
@@ -39,6 +39,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (sender instanceof Conversable) {
+            sender.sendMessage(ChatColor.GREEN + "Say \"abort\" at any time to cancel package creation.");
             factory.buildConversation((Conversable) sender).begin();
         }
         return true;
@@ -93,7 +94,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
         }
     }
 
-    private class MoneyPrompt extends NumericPrompt {
+    private class MoneyPrompt extends NumericPrompt {//TODO Needs perms
 
         @Override
         public String getPromptText(ConversationContext context) {
@@ -107,7 +108,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
 
         @Override
         protected String getFailedValidationText(ConversationContext context, Number invalidInput) {
-            return ChatColor.RED + "Number must be greater than or equal to zero";
+            return "Number must be greater than or equal to zero";
         }
 
         @Override
@@ -119,7 +120,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
         }
     }
 
-    private class PreItemPrompt extends MessagePrompt {
+    private class PreItemPrompt extends MessagePrompt {//TODO Needs perms
 
         @Override
         public String getPromptText(ConversationContext context) {
@@ -146,13 +147,14 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
         }
 
         @Override
-        public Prompt acceptInput(ConversationContext context, String input) { //FIXME This doesn't work
+        public Prompt acceptInput(ConversationContext context, String input) {
             if (input.equalsIgnoreCase("done")) {
                 Inventory inv = (Inventory) context.getSessionData("inventory");
                 PackageBuilder builder = ((PackageBuilder) context.getSessionData("builder"));
                 for (ItemStack item : inv.getContents()) {
-                    if (item.getType() != Material.AIR) {
+                    if (item != null) {
                         builder.withItemStack(item);
+                        ((Player) context.getForWhom()).getInventory().addItem(item);
                     }
                 }
                 return new CommandPrompt();
@@ -171,7 +173,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
 
         @Override
         public String getPromptText(ConversationContext context) {
-            return ChatColor.GREEN + "Enter a command you wish this package to run. Say \"done\" when you are finished. You are not required to enter any commands.";
+            return ChatColor.GREEN + "Enter a command you wish this package to run. The string <player> will be replaced with the name of the player redeeming the package. Say \"done\" when you are finished. You are not required to enter any commands.";
         }
 
         @Override
@@ -205,7 +207,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
 
         @Override
         public String getPromptText(ConversationContext context) {
-            return ChatColor.GREEN + "What should the embargo be set to for this package? Respond in the format yyyy-MM-dd HH:mm:ss. Say \"none\" for no embargo.";
+            return ChatColor.GREEN + "What should the embargo be set to for this package? Respond in the format yyyy-MM-dd HH:mm:ss. Say \"none\" for no embargo. The current time is " + sdf.format(new Date());
         }
 
         @Override
@@ -214,11 +216,20 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
                 return true;
             }
             try {
-                ((PackageBuilder) context.getSessionData("builder")).withEmbargo(sdf.parse(input).getTime() / 1000);
+                Date date = sdf.parse(input);
+                if (System.currentTimeMillis() > date.getTime()) {
+                    return false;
+                }
+                ((PackageBuilder) context.getSessionData("builder")).withEmbargo(date.getTime() / 1000);
                 return true;
             } catch (ParseException e) {
                 return false;
             }
+        }
+
+        @Override
+        protected String getFailedValidationText(ConversationContext context, String invalidInput) {
+            return "Invalid date format or embargo has already occured.";
         }
 
         @Override
@@ -233,7 +244,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
 
         @Override
         public String getPromptText(ConversationContext context) {
-            return ChatColor.GREEN + "What should the expiry be set to for this package? Respond in the format yyyy-MM-dd HH:mm:ss. Say \"none\" for no expiry.";
+            return ChatColor.GREEN + "What should the expiry be set to for this package? Respond in the format yyyy-MM-dd HH:mm:ss. Say \"none\" for no expiry.  The current time is " + sdf.format(new Date());
         }
 
         @Override
@@ -242,11 +253,20 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
                 return true;
             }
             try {
-                ((PackageBuilder) context.getSessionData("builder")).withExpiry(sdf.parse(input).getTime() / 1000);
+                Date date = sdf.parse(input);
+                if (System.currentTimeMillis() > date.getTime()) {
+                    return false;
+                }
+                ((PackageBuilder) context.getSessionData("builder")).withExpiry(date.getTime() / 1000);
                 return true;
             } catch (ParseException e) {
                 return false;
             }
+        }
+
+        @Override
+        protected String getFailedValidationText(ConversationContext context, String invalidInput) {
+            return "Invalid date format or expiry has already occured.";
         }
 
         @Override
@@ -332,7 +352,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
 
         @Override
         protected String getFailedValidationText(ConversationContext context, Number invalidInput) {
-            return ChatColor.RED + "Number must be -1 or greater than 0";
+            return "Number must be -1 or greater than 0";
         }
 
         @Override

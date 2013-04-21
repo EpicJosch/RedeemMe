@@ -27,7 +27,7 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
         }
         Player player = (Player) sender;
 
-        if (args.length == 1 && args[0].equalsIgnoreCase("list")) {
+        if (args.length == 1 && args[0].equalsIgnoreCase("list")) { //TODO Show pending packages
             if (Redeem.listAvailable(player)) {
                 sender.sendMessage(ChatColor.GREEN + "Type /redeem details <id> to see what the package contains");
             } else {

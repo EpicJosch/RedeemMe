@@ -27,14 +27,17 @@ public class CouponCode {
     }
 
     /**
-     * Creates a new coupon code and immediately inserts it into the database
+     * Creates a new custom coupon code and immediately inserts it into the database
      * 
+     * @param code
+     *            The custom coupon code to create. Must be 15 alphanumeric characters. TODO Check case sensitivity
      * @param remaining
      *            The amount of this coupon that may be redeemed
      * @throws SQLException
+     *             Thrown if the code already exists or on another SQL error.
      */
-    public CouponCode(int remaining) throws SQLException {
-        this.code = randomString(15);
+    public CouponCode(String code, int remaining) throws SQLException {
+        this.code = code;
         this.remaining = remaining;
 
         PreparedStatement ps = RedeemMe.getInstance().getMySQL().getFreshPreparedStatementWithGeneratedKeys("INSERT INTO couponcodes (code, remaining) VALUES (?,?)");
@@ -49,14 +52,36 @@ public class CouponCode {
         }
     }
 
+    /**
+     * Creates a new coupon code and immediately inserts it into the database
+     * 
+     * @param remaining
+     *            The amount of this coupon that may be redeemed
+     * @throws SQLException
+     *             Thrown if the code already exists or on another SQL error.
+     */
+    public CouponCode(int remaining) throws SQLException {
+        this(randomString(15), remaining);
+    }
+
     int getID() {
         return this.id;
     }
 
+    /**
+     * Gets the coupon code that this object represents.
+     * 
+     * @return The coupon code that this object represents.
+     */
     public String getCode() {
         return this.code;
     }
 
+    /**
+     * Gets how many times this coupon may be redeemed.
+     * 
+     * @return How many times this coupon may be redeemed.
+     */
     public int getRemaining() {
         return this.remaining;
     }

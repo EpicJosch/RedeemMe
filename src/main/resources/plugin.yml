@@ -9,15 +9,20 @@ commands:
   redeem:
     description: Redeem items or coupons
     usage: /redeem
-    permission: j2mc.redemption.redeem
+    permission: redeem.redeem
     permission-message: No soup for you
   printcoupon:
     usage: /printcoupon
   rdtest:
     usage: /<command>
   createpackage:
+    description: Create a package for redemption
     usage: /<command>
+    permission: redeem.createpackage
+    permission-message: You may not create packages
 permissions:
-  j2mc.redemption.redeem:
-    description: Redeem items or coupons
+  redeem.redeem:
+    description: Redeem packages or coupons
     default: true
+  redeem.createpackage:
+    description: Create packages for redemption
