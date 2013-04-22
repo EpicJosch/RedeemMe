@@ -26,20 +26,23 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-public class CreatePackageCommand implements CommandExecutor {//TODO Custom coupon codes TODO Allow review before inserting
+import to.joe.redeem.exception.CouponCodeAlreadyExistsException;
+import to.joe.redeem.exception.IncompletePackageException;
+
+public class CreatePackageCommand implements CommandExecutor {//TODO Allow review before inserting TODO Colors
 
     private ConversationFactory factory;
     private RedeemMe plugin;
 
     public CreatePackageCommand(RedeemMe plugin) {
         this.plugin = plugin;
-        this.factory = new ConversationFactory(this.plugin).withEscapeSequence("abort").thatExcludesNonPlayersWithMessage(ChatColor.RED + "Only players may use this command").withFirstPrompt(new NamePrompt()).withModality(false).withPrefix(new PluginNameConversationPrefix(this.plugin, "> ", ChatColor.GOLD));
+        this.factory = new ConversationFactory(this.plugin).withEscapeSequence("abort").thatExcludesNonPlayersWithMessage("Only players may use this command").withFirstPrompt(new NamePrompt()).withModality(false).withPrefix(new PluginNameConversationPrefix(this.plugin, "> ", ChatColor.GOLD));
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (sender instanceof Conversable) {
-            sender.sendMessage(ChatColor.GREEN + "Say \"abort\" at any time to cancel package creation.");
+            sender.sendMessage(ChatColor.GOLD + "RedeemMe> " + ChatColor.GREEN + "Say \"abort\" at any time to cancel package creation.");
             factory.buildConversation((Conversable) sender).begin();
         }
         return true;
@@ -90,11 +93,21 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
             if (!input.equalsIgnoreCase("none")) {
                 ((PackageBuilder) context.getSessionData("builder")).withCreator(input);
             }
-            return new MoneyPrompt();
+            Player player = (Player) context.getForWhom();
+            if (player.hasPermission("redeem.createpackage.money")) {
+                return new MoneyPrompt();
+            } else if (player.hasPermission("redeem.createpackage.item")) {
+                return new PreItemPrompt();
+            } else if (player.hasPermission("redeem.createpackage.command")) {
+                return new CommandPrompt();
+            } else {
+                context.getForWhom().sendRawMessage(ChatColor.RED + "Your permissions are screwed up. Aborting.");
+                return Prompt.END_OF_CONVERSATION;
+            }
         }
     }
 
-    private class MoneyPrompt extends NumericPrompt {//TODO Needs perms
+    private class MoneyPrompt extends NumericPrompt {
 
         @Override
         public String getPromptText(ConversationContext context) {
@@ -116,11 +129,18 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
             if (input.doubleValue() > 0) {
                 ((PackageBuilder) context.getSessionData("builder")).withMoney(input.doubleValue());
             }
-            return new PreItemPrompt();
+            Player player = (Player) context.getForWhom();
+            if (player.hasPermission("redeem.createpackage.item")) {
+                return new PreItemPrompt();
+            } else if (player.hasPermission("redeem.createpackage.command")) {
+                return new CommandPrompt();
+            } else {
+                return new EmbargoPrompt();
+            }
         }
     }
 
-    private class PreItemPrompt extends MessagePrompt {//TODO Needs perms
+    private class PreItemPrompt extends MessagePrompt {
 
         @Override
         public String getPromptText(ConversationContext context) {
@@ -157,7 +177,12 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
                         ((Player) context.getForWhom()).getInventory().addItem(item);
                     }
                 }
-                return new CommandPrompt();
+                Player player = (Player) context.getForWhom();
+                if (player.hasPermission("redeem.createpackage.command")) {
+                    return new CommandPrompt();
+                } else {
+                    return new EmbargoPrompt();
+                }
             } else {
                 return new ItemPrompt();
             }
@@ -169,7 +194,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
         }
     }
 
-    private class CommandPrompt extends StringPrompt {//TODO This needs perms! Otherwise an admin will be able to create a command that gives them more power!
+    private class CommandPrompt extends StringPrompt {
 
         @Override
         public String getPromptText(ConversationContext context) {
@@ -303,6 +328,12 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
         }
 
         @Override
+        protected boolean isInputValid(ConversationContext context, String input) {
+            input = input.toLowerCase();
+            return super.isInputValid(context, input);
+        }
+
+        @Override
         protected Prompt acceptValidatedInput(ConversationContext context, String input) {
             if (input.equalsIgnoreCase("player")) {
                 return new PlayerPrompt();
@@ -329,10 +360,12 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
         protected Prompt acceptValidatedInput(ConversationContext context, String input) {
             try {
                 ((PackageBuilder) context.getSessionData("builder")).forPlayer(input).build();
-                context.getForWhom().sendRawMessage(ChatColor.GREEN + "Sucessfully created package!");
+                context.getForWhom().sendRawMessage(ChatColor.GREEN + "Sucessfully created package for " + input + "!");
             } catch (SQLException e) {
                 context.getForWhom().sendRawMessage(ChatColor.RED + "There was a SQL error when creating the package.");
                 plugin.getLogger().log(Level.SEVERE, "Error creating package", e);
+            } catch (IncompletePackageException e) {
+                context.getForWhom().sendRawMessage(ChatColor.RED + "Your package is incomplete. Make sure you have money, items, or commands. Aborting.");
             }
             return Prompt.END_OF_CONVERSATION;
         }
@@ -357,13 +390,75 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Custom coup
 
         @Override
         protected Prompt acceptValidatedInput(ConversationContext context, Number input) {
+            context.setSessionData("quantity", input.intValue());
+            return new CouponTypePrompt();
+        }
+    }
+
+    private class CouponTypePrompt extends BooleanPrompt {
+
+        @Override
+        public String getPromptText(ConversationContext context) {
+            return ChatColor.GREEN + "Would you like to use a custom coupon code?";
+        }
+
+        @Override
+        protected Prompt acceptValidatedInput(ConversationContext context, boolean input) {
+            if (input) {
+                return new CouponCodePrompt();
+            } else {
+                try {
+                    CouponCode code = new CouponCode((Integer) context.getSessionData("quantity"));
+                    ((PackageBuilder) context.getSessionData("builder")).withCode(code).build();
+                    context.getForWhom().sendRawMessage(ChatColor.GREEN + "Sucessfully created coupon with code \"" + code.getCode() + "\"");
+                } catch (SQLException e) {
+                    context.getForWhom().sendRawMessage(ChatColor.RED + "There was a SQL error when creating the package.");
+                    plugin.getLogger().log(Level.SEVERE, "Error creating coupon", e);
+                } catch (CouponCodeAlreadyExistsException e) {
+                    return acceptValidatedInput(context, input);
+                } catch (IncompletePackageException e) {
+                    context.getForWhom().sendRawMessage(ChatColor.RED + "Your package is incomplete. Make sure you have money, items, or commands. Aborting.");
+                }
+                return Prompt.END_OF_CONVERSATION;
+            }
+        }
+    }
+
+    private class CouponCodePrompt extends RegexPrompt {
+
+        public CouponCodePrompt() {
+            super("[A-Za-z0-9]{15}");
+        }
+
+        @Override
+        public String getPromptText(ConversationContext context) {
+            return ChatColor.GREEN + "Enter a 15 character alphanumeric coupon code.";
+        }
+
+        @Override
+        protected boolean isInputValid(ConversationContext context, String input) {
+            return super.isInputValid(context, input.toUpperCase());
+        }
+
+        @Override
+        protected String getFailedValidationText(ConversationContext context, String invalidInput) {
+            return "Invalid coupon code";
+        }
+
+        @Override
+        protected Prompt acceptValidatedInput(ConversationContext context, String input) {
             try {
-                CouponCode code = new CouponCode(input.intValue());
+                CouponCode code = new CouponCode(input, (Integer) context.getSessionData("quantity"));
                 ((PackageBuilder) context.getSessionData("builder")).withCode(code).build();
                 context.getForWhom().sendRawMessage(ChatColor.GREEN + "Sucessfully created coupon with code \"" + code.getCode() + "\"");
             } catch (SQLException e) {
-                context.getForWhom().sendRawMessage(ChatColor.RED + "There was a SQL error when creating the package.");
+                context.getForWhom().sendRawMessage(ChatColor.RED + "There was a SQL error when creating the package. Aborting.");
                 plugin.getLogger().log(Level.SEVERE, "Error creating coupon", e);
+            } catch (CouponCodeAlreadyExistsException e) {
+                context.getForWhom().sendRawMessage(ChatColor.RED + "That coupon code already exists.");
+                return new CouponCodePrompt();
+            } catch (IncompletePackageException e) {
+                context.getForWhom().sendRawMessage(ChatColor.RED + "Your package is incomplete. Make sure you have money, items, or commands. Aborting.");
             }
             return Prompt.END_OF_CONVERSATION;
         }

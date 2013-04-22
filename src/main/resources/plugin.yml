@@ -8,11 +8,14 @@ softdepend: [Vault, StrangeWeapons]
 commands:
   redeem:
     description: Redeem items or coupons
-    usage: /redeem
+    usage: /<command>
     permission: redeem.redeem
     permission-message: No soup for you
   printcoupon:
-    usage: /printcoupon
+    description: Turn a coupon code into physical item
+    usage: /<command> <code>
+    permission: redeem.printcoupon
+    permission-message: You may not print coupons
   rdtest:
     usage: /<command>
   createpackage:
@@ -26,3 +29,22 @@ permissions:
     default: true
   redeem.createpackage:
     description: Create packages for redemption
+  redeem.createpackage.*:
+    description: All permissions for creating packages
+    children:
+      redeem.createpackage: true
+      redeem.createpackage.money: true
+      redeem.createpackage.item: true
+      redeem.createpackage.command: true
+  redeem.createpackage.money:
+    description: Allows adding money to packages
+    children:
+      redeem.createpackage: true
+  redeem.createpackage.item:
+    description: Allows adding items to packages
+    children:
+      redeem.createpackage: true
+  redeem.createpackage.command:
+    description: Allows adding commands to packages
+    children:
+      redeem.createpackage: true

@@ -5,6 +5,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Random;
 
+import to.joe.redeem.exception.CouponCodeAlreadyExistsException;
+import to.joe.redeem.exception.InvalidCouponCodeException;
+
 /**
  * This represents a coupon code, a unique 15 character alphanumeric string.
  * 
@@ -30,25 +33,39 @@ public class CouponCode {
      * Creates a new custom coupon code and immediately inserts it into the database
      * 
      * @param code
-     *            The custom coupon code to create. Must be 15 alphanumeric characters. TODO Check case sensitivity
+     *            The custom coupon code to create. Must be 15 alphanumeric characters. Will be converted to an uppercase string. An {@link InvalidCouponCodeException} will be thrown if an invalid code is passed.
      * @param remaining
      *            The amount of this coupon that may be redeemed
      * @throws SQLException
-     *             Thrown if the code already exists or on another SQL error.
+     *             Thrown on SQL error
+     * @throws CouponCodeAlreadyExistsException
+     *             Thrown when the coupon code already exists
      */
-    public CouponCode(String code, int remaining) throws SQLException {
-        this.code = code;
+    public CouponCode(String code, int remaining) throws SQLException, CouponCodeAlreadyExistsException {
+        this.code = code.toUpperCase();
         this.remaining = remaining;
 
-        PreparedStatement ps = RedeemMe.getInstance().getMySQL().getFreshPreparedStatementWithGeneratedKeys("INSERT INTO couponcodes (code, remaining) VALUES (?,?)");
-        ps.setString(1, this.code);
-        ps.setInt(2, this.remaining);
-        ps.execute();
-        ResultSet rs = ps.getGeneratedKeys();
-        if (rs.next()) {
-            this.id = rs.getInt(1);
-        } else {
-            throw new SQLException("Error creating new coupon code!");
+        if (!this.code.matches("[A-Za-z0-9]{15}")) {
+            throw new InvalidCouponCodeException("The coupon code " + this.code + " is not valid");
+        }
+
+        try {
+            PreparedStatement ps = RedeemMe.getInstance().getMySQL().getFreshPreparedStatementWithGeneratedKeys("INSERT INTO couponcodes (code, remaining) VALUES (?,?)");
+            ps.setString(1, this.code);
+            ps.setInt(2, this.remaining);
+            ps.execute();
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                this.id = rs.getInt(1);
+            } else {
+                throw new SQLException("Error creating new coupon code!");
+            }
+        } catch (SQLException e) {
+            if (e.getMessage().matches("Duplicate entry .*? for key 'code'")) {
+                throw new CouponCodeAlreadyExistsException("The code " + code + " already exists in the database");
+            } else {
+                throw e;
+            }
         }
     }
 
@@ -58,9 +75,11 @@ public class CouponCode {
      * @param remaining
      *            The amount of this coupon that may be redeemed
      * @throws SQLException
-     *             Thrown if the code already exists or on another SQL error.
+     *             Thrown on SQL error
+     * @throws CouponCodeAlreadyExistsException
+     *             Thrown when the coupon code already exists
      */
-    public CouponCode(int remaining) throws SQLException {
+    public CouponCode(int remaining) throws SQLException, CouponCodeAlreadyExistsException {
         this(randomString(15), remaining);
     }
 

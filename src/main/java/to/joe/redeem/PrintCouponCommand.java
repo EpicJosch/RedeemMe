@@ -34,9 +34,17 @@ public class PrintCouponCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.RED + "Usage: /printcoupon <code>");
             return true;
         }
+        int quantity = 1;
+        if (args.length > 1) {
+            try {
+                quantity = Integer.parseInt(args[1]);
+            } catch (NumberFormatException e) {
+                //Ignore
+            }
+        }
         Player player = (Player) sender;
         try {
-            ItemStack couponItem = new ItemStack(Material.PAPER);
+            ItemStack couponItem = new ItemStack(Material.PAPER, quantity);
             ItemMeta meta = couponItem.getItemMeta();
             ArrayList<String> lore = new ArrayList<String>();
             int id = Package.idFromCode(args[0].replaceAll("-", ""));
