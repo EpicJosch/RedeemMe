@@ -54,7 +54,7 @@ public class Redeem {
     }
 
     static boolean details(Package pack, Player player, String type, boolean redeemPackage) throws SQLException {
-        if (!pack.getPlayer().equals("*") && !pack.getPlayer().equals(player.getName())) {
+        if (!pack.getPlayer().equals("*") && !pack.getPlayer().equalsIgnoreCase(player.getName())) {
             player.sendMessage(ChatColor.RED + "That " + type + " is not owned by you");
             return false;
         }
