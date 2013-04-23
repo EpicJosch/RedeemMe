@@ -47,3 +47,5 @@ permissions:
     description: Allows adding commands to packages
     children:
       redeem.createpackage: true
+  redeem.printcoupon:
+    description: Allows creating physical items out of coupon codes
