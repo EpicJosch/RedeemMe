@@ -19,10 +19,10 @@ public class CouponCode {
     private String code;
     private int remaining;
 
-    static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    static Random rnd = new Random();
+    private static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static Random rnd = new Random();
 
-    static String randomString(int len) {
+    private static String randomString(int len) {
         StringBuilder sb = new StringBuilder(len);
         for (int i = 0; i < len; i++)
             sb.append(AB.charAt(rnd.nextInt(AB.length())));
@@ -30,25 +30,33 @@ public class CouponCode {
     }
 
     /**
-     * Creates a new custom coupon code and immediately inserts it into the database
+     * Creates a new custom coupon code which will be inserted into the database on package build
      * 
      * @param code
      *            The custom coupon code to create. Must be 15 alphanumeric characters. Will be converted to an uppercase string. An {@link InvalidCouponCodeException} will be thrown if an invalid code is passed.
      * @param remaining
      *            The amount of this coupon that may be redeemed
-     * @throws SQLException
-     *             Thrown on SQL error
-     * @throws CouponCodeAlreadyExistsException
-     *             Thrown when the coupon code already exists
      */
-    public CouponCode(String code, int remaining) throws SQLException, CouponCodeAlreadyExistsException {
+    public CouponCode(String code, int remaining) {
         this.code = code.toUpperCase();
         this.remaining = remaining;
 
         if (!this.code.matches("[A-Za-z0-9]{15}")) {
             throw new InvalidCouponCodeException("The coupon code " + this.code + " is not valid");
         }
+    }
 
+    /**
+     * Creates a new coupon code which will be inserted into the database on package build
+     * 
+     * @param remaining
+     *            The amount of this coupon that may be redeemed
+     */
+    public CouponCode(int remaining) {
+        this(randomString(15), remaining);
+    }
+
+    void save() throws CouponCodeAlreadyExistsException, SQLException {
         try {
             PreparedStatement ps = RedeemMe.getInstance().getMySQL().getFreshPreparedStatementWithGeneratedKeys("INSERT INTO couponcodes (code, remaining) VALUES (?,?)");
             ps.setString(1, this.code);
@@ -70,17 +78,15 @@ public class CouponCode {
     }
 
     /**
-     * Creates a new coupon code and immediately inserts it into the database
+     * Checks to see if this coupon code already exists in the database.
      * 
-     * @param remaining
-     *            The amount of this coupon that may be redeemed
+     * @return True if the code already exists
      * @throws SQLException
-     *             Thrown on SQL error
-     * @throws CouponCodeAlreadyExistsException
-     *             Thrown when the coupon code already exists
      */
-    public CouponCode(int remaining) throws SQLException, CouponCodeAlreadyExistsException {
-        this(randomString(15), remaining);
+    public boolean codeExists() throws SQLException {
+        PreparedStatement ps = RedeemMe.getInstance().getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM couponcodes WHERE code = ?");
+        ResultSet rs = ps.executeQuery();
+        return rs.next();
     }
 
     int getID() {

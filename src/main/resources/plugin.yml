@@ -16,8 +16,6 @@ commands:
     usage: /<command> <code>
     permission: redeem.printcoupon
     permission-message: You may not print coupons
-  rdtest:
-    usage: /<command>
   createpackage:
     description: Create a package for redemption
     usage: /<command>

@@ -59,33 +59,33 @@ public class PrintCouponCommand implements CommandExecutor {
                 return true;
             }
             if (pack.getName() == null) {
-                meta.setDisplayName(ChatColor.GREEN + "Coupon");
+                meta.setDisplayName(ChatColor.BLUE + "Coupon");
             } else {
-                meta.setDisplayName(ChatColor.GREEN + "Coupon: " + ChatColor.YELLOW + pack.getName());
+                meta.setDisplayName(ChatColor.BLUE + "Coupon: " + ChatColor.GOLD + pack.getName());
             }
             if (pack.getDescription() != null) {
-                lore.add(ChatColor.GREEN + "Description: " + ChatColor.YELLOW + pack.getDescription());
+                lore.add(ChatColor.BLUE + "Description: " + ChatColor.GOLD + pack.getDescription());
             }
             if (pack.getCreator() != null) {
-                lore.add(ChatColor.GREEN + "Given by: " + ChatColor.YELLOW + pack.getCreator());
+                lore.add(ChatColor.BLUE + "Given by: " + ChatColor.GOLD + pack.getCreator());
             }
             if (!pack.isEmpty()) {
                 lore.add(ChatColor.GREEN + "This coupon contains the following item(s)");
                 if (pack.getMoney() != null) {
-                    lore.add(ChatColor.GREEN + "" + pack.getMoney() + " " + ChatColor.GOLD + RedeemMe.economy.currencyNamePlural());
+                    lore.add(ChatColor.BLUE + "" + pack.getMoney() + " " + ChatColor.GOLD + RedeemMe.economy.currencyNamePlural());
                 }
                 if (!pack.getItems().isEmpty()) {
                     for (ItemStack item : pack.getItems()) {
                         if (item.getItemMeta().hasDisplayName()) {
-                            lore.add(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getItemMeta().getDisplayName());
+                            lore.add(ChatColor.BLUE + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getItemMeta().getDisplayName());
                         } else {
-                            lore.add(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType().toString());
+                            lore.add(ChatColor.BLUE + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType().toString());
                         }
                     }
                 }
                 if (!pack.getCommands().isEmpty()) {
                     for (Entry<String, Boolean> com : pack.getCommands().entrySet()) {
-                        lore.add(ChatColor.GREEN + "Command: " + ChatColor.GOLD + com.getKey());
+                        lore.add(ChatColor.BLUE + "Command: " + ChatColor.GOLD + com.getKey());
                     }
                 }
                 lore.add(ChatColor.RED + "Coupon code " + args[0].toUpperCase());

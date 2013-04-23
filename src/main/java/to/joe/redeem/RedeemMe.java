@@ -22,7 +22,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import to.joe.redeem.exception.NonexistentCouponException;
 
-public class RedeemMe extends JavaPlugin implements Listener { //TODO Look into created time in table, it's not right at all
+public class RedeemMe extends JavaPlugin implements Listener {
 
     static Economy economy = null;
     private MySQL sql;
@@ -79,7 +79,6 @@ public class RedeemMe extends JavaPlugin implements Listener { //TODO Look into 
         }
         getCommand("redeem").setExecutor(new RedeemCommand(this));
         getCommand("printcoupon").setExecutor(new PrintCouponCommand(this));
-        getCommand("rdtest").setExecutor(new RDTestCommand());
         getCommand("createpackage").setExecutor(new CreatePackageCommand(this));
         getServer().getPluginManager().registerEvents(this, this);
         instance = this;

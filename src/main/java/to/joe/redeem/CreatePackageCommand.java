@@ -29,7 +29,7 @@ import org.bukkit.inventory.ItemStack;
 import to.joe.redeem.exception.CouponCodeAlreadyExistsException;
 import to.joe.redeem.exception.IncompletePackageException;
 
-public class CreatePackageCommand implements CommandExecutor {//TODO Allow review before inserting TODO Colors
+public class CreatePackageCommand implements CommandExecutor {
 
     private ConversationFactory factory;
     private RedeemMe plugin;
@@ -42,7 +42,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (sender instanceof Conversable) {
-            sender.sendMessage(ChatColor.GOLD + "RedeemMe> " + ChatColor.GREEN + "Say \"abort\" at any time to cancel package creation.");
+            sender.sendMessage(ChatColor.GOLD + "RedeemMe> " + ChatColor.BLUE + "Say " + ChatColor.RED + "abort" + ChatColor.BLUE + " at any time to " + ChatColor.GOLD + "cancel " + ChatColor.BLUE + "package creation.");
             factory.buildConversation((Conversable) sender).begin();
         }
         return true;
@@ -53,7 +53,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
         @Override
         public String getPromptText(ConversationContext context) {
             context.setSessionData("builder", new PackageBuilder());
-            return ChatColor.GREEN + "What should this package be named? (Enter \"none\" for no name)";
+            return ChatColor.BLUE + "What should the " + ChatColor.GOLD + "name " + ChatColor.BLUE + "of this package be? (Enter " + ChatColor.RED + "none" + ChatColor.BLUE + " for no name)";
         }
 
         @Override
@@ -69,7 +69,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
 
         @Override
         public String getPromptText(ConversationContext context) {
-            return ChatColor.GREEN + "What should the description of this package be? (Enter \"none\" for no description)";
+            return ChatColor.BLUE + "What should the " + ChatColor.GOLD + "description " + ChatColor.BLUE + "of this package be? (Enter " + ChatColor.RED + "none" + ChatColor.BLUE + " for no description)";
         }
 
         @Override
@@ -85,7 +85,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
 
         @Override
         public String getPromptText(ConversationContext context) {
-            return ChatColor.GREEN + "Who or what should the creator of this package be? (Enter \"none\" for no creator)";
+            return ChatColor.BLUE + "Who or what should the " + ChatColor.GOLD + "creator " + ChatColor.BLUE + "of this package be? (Enter " + ChatColor.RED + "none" + ChatColor.BLUE + " for no creator)";
         }
 
         @Override
@@ -94,7 +94,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
                 ((PackageBuilder) context.getSessionData("builder")).withCreator(input);
             }
             Player player = (Player) context.getForWhom();
-            if (player.hasPermission("redeem.createpackage.money")) {
+            if (player.hasPermission("redeem.createpackage.money") && RedeemMe.economy != null) {
                 return new MoneyPrompt();
             } else if (player.hasPermission("redeem.createpackage.item")) {
                 return new PreItemPrompt();
@@ -111,7 +111,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
 
         @Override
         public String getPromptText(ConversationContext context) {
-            return ChatColor.GREEN + "How much money should this package have? (Enter 0 for none)";
+            return ChatColor.BLUE + "How much " + ChatColor.GOLD + "money " + ChatColor.BLUE + "should this package have? (Enter " + ChatColor.RED + "0 " + ChatColor.BLUE + "for none)";
         }
 
         @Override
@@ -148,7 +148,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
                 Inventory inv = plugin.getServer().createInventory(null, 27, "Package Items");
                 context.setSessionData("inventory", inv);
             }
-            return ChatColor.GREEN + "Select items you wish to include in the package.";
+            return ChatColor.BLUE + "Select " + ChatColor.GOLD + "items " + ChatColor.BLUE + "you wish to include in the package.";
         }
 
         @Override
@@ -163,7 +163,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
         public String getPromptText(ConversationContext context) {
             Player player = (Player) context.getForWhom();
             player.openInventory((Inventory) context.getSessionData("inventory"));
-            return ChatColor.GREEN + "Place the items you wish to include into the top half of the inventory screen. Type \"done\" when you are finished. Type anything else to show this message and open the inventory again. You are not requried to add any items.";
+            return ChatColor.BLUE + "Place the " + ChatColor.GOLD + "items " + ChatColor.BLUE + "you wish to include into the top half of the inventory screen. Type " + ChatColor.RED + "done" + ChatColor.BLUE + " when you are finished. Type anything else to show this message and open the inventory again. You are not requried to add any items.";
         }
 
         @Override
@@ -198,7 +198,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
 
         @Override
         public String getPromptText(ConversationContext context) {
-            return ChatColor.GREEN + "Enter a command you wish this package to run. The string <player> will be replaced with the name of the player redeeming the package. Say \"done\" when you are finished. You are not required to enter any commands.";
+            return ChatColor.BLUE + "Enter a " + ChatColor.GOLD + "command " + ChatColor.BLUE + "you wish this package to run. The string " + ChatColor.GOLD + "<player> " + ChatColor.BLUE + "will be replaced with the name of the player redeeming the package. Say " + ChatColor.RED + "done" + ChatColor.BLUE + " when you are finished. You are not required to enter any commands.";
         }
 
         @Override
@@ -216,7 +216,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
 
         @Override
         public String getPromptText(ConversationContext context) {
-            return ChatColor.GREEN + "Should the command \"" + context.getSessionData("command") + "\" be run as console?";
+            return ChatColor.BLUE + "Should the command " + ChatColor.GOLD + context.getSessionData("command") + ChatColor.BLUE + " be run as " + ChatColor.GOLD + "console" + ChatColor.BLUE + "?";
         }
 
         @Override
@@ -232,7 +232,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
 
         @Override
         public String getPromptText(ConversationContext context) {
-            return ChatColor.GREEN + "What should the embargo be set to for this package? Respond in the format yyyy-MM-dd HH:mm:ss. Say \"none\" for no embargo. The current time is " + sdf.format(new Date());
+            return ChatColor.BLUE + "What should the " + ChatColor.GOLD + "embargo " + ChatColor.BLUE + "be set to for this package? Respond in the format yyyy-MM-dd HH:mm:ss. Say " + ChatColor.RED + "none" + ChatColor.BLUE + " for no embargo. The current time is " + ChatColor.GOLD + sdf.format(new Date());
         }
 
         @Override
@@ -269,7 +269,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
 
         @Override
         public String getPromptText(ConversationContext context) {
-            return ChatColor.GREEN + "What should the expiry be set to for this package? Respond in the format yyyy-MM-dd HH:mm:ss. Say \"none\" for no expiry.  The current time is " + sdf.format(new Date());
+            return ChatColor.BLUE + "What should the " + ChatColor.GOLD + "expiry " + ChatColor.BLUE + "be set to for this package? Respond in the format yyyy-MM-dd HH:mm:ss. Say " + ChatColor.RED + "none" + ChatColor.BLUE + " for no expiry.  The current time is " + ChatColor.GOLD + sdf.format(new Date());
         }
 
         @Override
@@ -304,7 +304,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
 
         @Override
         public String getPromptText(ConversationContext context) {
-            return ChatColor.GREEN + "Which server should this package be valid on? (Enter * for all servers)";
+            return ChatColor.BLUE + "Which " + ChatColor.GOLD + "server " + ChatColor.BLUE + "should this package be valid on? (Enter " + ChatColor.GOLD + "* " + ChatColor.BLUE + "for all servers)";
         }
 
         @Override
@@ -324,7 +324,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
 
         @Override
         public String getPromptText(ConversationContext context) {
-            return ChatColor.GREEN + "Should this package be for a player only, or should it have a coupon code?";
+            return ChatColor.BLUE + "Should this package be for a " + ChatColor.GOLD + "player " + ChatColor.BLUE + "only, or should it have a " + ChatColor.GOLD + "coupon " + ChatColor.BLUE + "code?";
         }
 
         @Override
@@ -353,21 +353,13 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
 
         @Override
         public String getPromptText(ConversationContext context) {
-            return ChatColor.GREEN + "Which player should be able to redeem this package?";
+            return ChatColor.BLUE + "Which " + ChatColor.GOLD + "player " + ChatColor.BLUE + "should be able to redeem this package?";
         }
 
         @Override
         protected Prompt acceptValidatedInput(ConversationContext context, String input) {
-            try {
-                ((PackageBuilder) context.getSessionData("builder")).forPlayer(input).build();
-                context.getForWhom().sendRawMessage(ChatColor.GREEN + "Sucessfully created package for " + input + "!");
-            } catch (SQLException e) {
-                context.getForWhom().sendRawMessage(ChatColor.RED + "There was a SQL error when creating the package.");
-                plugin.getLogger().log(Level.SEVERE, "Error creating package", e);
-            } catch (IncompletePackageException e) {
-                context.getForWhom().sendRawMessage(ChatColor.RED + "Your package is incomplete. Make sure you have money, items, or commands. Aborting.");
-            }
-            return Prompt.END_OF_CONVERSATION;
+            ((PackageBuilder) context.getSessionData("builder")).forPlayer(input);
+            return new ReviewPrompt();
         }
     }
 
@@ -375,7 +367,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
 
         @Override
         public String getPromptText(ConversationContext context) {
-            return ChatColor.GREEN + "How many coupons should be available? (Enter -1 for unlimited)";
+            return ChatColor.GOLD + "How many " + ChatColor.BLUE + "coupons should be available? (Enter " + ChatColor.GOLD + "-1 " + ChatColor.BLUE + "for unlimited)";
         }
 
         @Override
@@ -399,7 +391,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
 
         @Override
         public String getPromptText(ConversationContext context) {
-            return ChatColor.GREEN + "Would you like to use a custom coupon code?";
+            return ChatColor.BLUE + "Would you like to use a " + ChatColor.GOLD + "custom " + ChatColor.BLUE + "coupon code?";
         }
 
         @Override
@@ -407,19 +399,8 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
             if (input) {
                 return new CouponCodePrompt();
             } else {
-                try {
-                    CouponCode code = new CouponCode((Integer) context.getSessionData("quantity"));
-                    ((PackageBuilder) context.getSessionData("builder")).withCode(code).build();
-                    context.getForWhom().sendRawMessage(ChatColor.GREEN + "Sucessfully created coupon with code \"" + code.getCode() + "\"");
-                } catch (SQLException e) {
-                    context.getForWhom().sendRawMessage(ChatColor.RED + "There was a SQL error when creating the package.");
-                    plugin.getLogger().log(Level.SEVERE, "Error creating coupon", e);
-                } catch (CouponCodeAlreadyExistsException e) {
-                    return acceptValidatedInput(context, input);
-                } catch (IncompletePackageException e) {
-                    context.getForWhom().sendRawMessage(ChatColor.RED + "Your package is incomplete. Make sure you have money, items, or commands. Aborting.");
-                }
-                return Prompt.END_OF_CONVERSATION;
+                ((PackageBuilder) context.getSessionData("builder")).withCode(new CouponCode((Integer) context.getSessionData("quantity")));
+                return new ReviewPrompt();
             }
         }
     }
@@ -432,7 +413,7 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
 
         @Override
         public String getPromptText(ConversationContext context) {
-            return ChatColor.GREEN + "Enter a 15 character alphanumeric coupon code.";
+            return ChatColor.BLUE + "Enter a 15 character alphanumeric coupon code.";
         }
 
         @Override
@@ -447,20 +428,53 @@ public class CreatePackageCommand implements CommandExecutor {//TODO Allow revie
 
         @Override
         protected Prompt acceptValidatedInput(ConversationContext context, String input) {
+            ((PackageBuilder) context.getSessionData("builder")).withCode(new CouponCode(input, (Integer) context.getSessionData("quantity")));
+            return new ReviewPrompt();
+        }
+    }
+
+    private class ReviewPrompt extends BooleanPrompt {
+
+        @Override
+        public String getPromptText(ConversationContext context) {
             try {
-                CouponCode code = new CouponCode(input, (Integer) context.getSessionData("quantity"));
-                ((PackageBuilder) context.getSessionData("builder")).withCode(code).build();
-                context.getForWhom().sendRawMessage(ChatColor.GREEN + "Sucessfully created coupon with code \"" + code.getCode() + "\"");
-            } catch (SQLException e) {
-                context.getForWhom().sendRawMessage(ChatColor.RED + "There was a SQL error when creating the package. Aborting.");
-                plugin.getLogger().log(Level.SEVERE, "Error creating coupon", e);
-            } catch (CouponCodeAlreadyExistsException e) {
-                context.getForWhom().sendRawMessage(ChatColor.RED + "That coupon code already exists.");
-                return new CouponCodePrompt();
-            } catch (IncompletePackageException e) {
-                context.getForWhom().sendRawMessage(ChatColor.RED + "Your package is incomplete. Make sure you have money, items, or commands. Aborting.");
+                for (String msg : ((PackageBuilder) context.getSessionData("builder")).details()) {
+                    context.getForWhom().sendRawMessage(msg);
+                }
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+            return ChatColor.BLUE + "Is this information correct?";
+        }
+
+        @Override
+        protected Prompt acceptValidatedInput(ConversationContext context, boolean input) {
+            try {
+                if (input) {
+                    try {
+                        PackageBuilder builder = (PackageBuilder) context.getSessionData("builder");
+                        builder.build();
+                        if (builder.getCode() != null) {
+                            context.getForWhom().sendRawMessage(ChatColor.BLUE + "Sucessfully created coupon with code " + ChatColor.GOLD + builder.getCode() + ChatColor.BLUE + "!");
+                        } else {
+                            context.getForWhom().sendRawMessage(ChatColor.BLUE + "Sucessfully created package for " + ChatColor.GOLD + builder.getPlayer() + ChatColor.BLUE + "!");
+                        }
+                    } catch (SQLException e) {
+                        context.getForWhom().sendRawMessage(ChatColor.RED + "There was a SQL error when creating the package. Aborting.");
+                        plugin.getLogger().log(Level.SEVERE, "Error creating coupon", e);
+                    } catch (CouponCodeAlreadyExistsException e) {
+                        context.getForWhom().sendRawMessage(ChatColor.RED + "That coupon code already exists. Aborting.");
+                    } catch (IncompletePackageException e) {
+                        context.getForWhom().sendRawMessage(ChatColor.RED + "Your package is incomplete. Make sure you have money, items, or commands. Aborting.");
+                    }
+                } else {
+                    context.getForWhom().sendRawMessage(ChatColor.RED + "Aborted package creation.");
+                }
+            } catch (Throwable t) {
+                t.printStackTrace();
             }
             return Prompt.END_OF_CONVERSATION;
         }
+
     }
 }

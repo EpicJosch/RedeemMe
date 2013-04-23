@@ -163,7 +163,7 @@ public class Package {
             ps.setString(2, description);
         }
 
-        ps.setInt(3, (int) System.currentTimeMillis() / 1000);
+        ps.setLong(3, System.currentTimeMillis() / 1000);
 
         this.creator = creator;
         if (creator == null) {

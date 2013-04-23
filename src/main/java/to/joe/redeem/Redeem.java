@@ -9,6 +9,8 @@ import java.util.logging.Level;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import to.joe.strangeweapons.meta.StrangeWeapon;
@@ -20,7 +22,7 @@ public class Redeem {
             LinkedHashMap<Integer, String> packages = Package.getAvailablePackagesByPlayerName(player.getName());
             Iterator<Entry<Integer, String>> iterator = packages.entrySet().iterator();
             if (iterator.hasNext()) {
-                player.sendMessage(ChatColor.GREEN + "You have the following packages to redeem");
+                player.sendMessage(ChatColor.GREEN + "You have the following package IDs to redeem");
                 StringBuilder thisServer = new StringBuilder(ChatColor.YELLOW + "This server: ");
                 boolean packagesThisServer = false;
                 StringBuilder otherServers = new StringBuilder(ChatColor.RED + "Other servers: ");
@@ -51,7 +53,7 @@ public class Redeem {
         }
     }
 
-    static boolean details(Package pack, Player player, String type, boolean redeemPackage) throws SQLException { //TODO Make sure player has room in their inventory
+    static boolean details(Package pack, Player player, String type, boolean redeemPackage) throws SQLException {
         if (!pack.getPlayer().equals("*") && !pack.getPlayer().equals(player.getName())) {
             player.sendMessage(ChatColor.RED + "This " + type + " is not owned by you");
             return false;
@@ -69,13 +71,13 @@ public class Redeem {
             return false;
         }
         if (pack.getName() != null) {
-            player.sendMessage(ChatColor.GREEN + "Name: " + ChatColor.YELLOW + pack.getName());
+            player.sendMessage(ChatColor.BLUE + "Name: " + ChatColor.GOLD + pack.getName());
         }
         if (pack.getDescription() != null) {
-            player.sendMessage(ChatColor.GREEN + "Description: " + ChatColor.YELLOW + pack.getDescription());
+            player.sendMessage(ChatColor.BLUE + "Description: " + ChatColor.GOLD + pack.getDescription());
         }
         if (pack.getCreator() != null) {
-            player.sendMessage(ChatColor.GREEN + "Given by: " + ChatColor.YELLOW + pack.getCreator());
+            player.sendMessage(ChatColor.BLUE + "Given by: " + ChatColor.GOLD + pack.getCreator());
         }
         if (pack.getServer() != null && !pack.getServer().equals(player.getServer().getServerId())) {
             player.sendMessage(ChatColor.RED + "This " + type + " is not valid on this server");
@@ -83,39 +85,41 @@ public class Redeem {
             return false;
         }
         if (!pack.isEmpty()) {
-            player.sendMessage(ChatColor.GREEN + "ID " + pack.getId() + " contains the following item(s)"); //TODO Show coupon code instead of id
-            if (pack.getMoney() != null) {
-                player.sendMessage(ChatColor.GREEN + "" + pack.getMoney() + " " + ChatColor.GOLD + RedeemMe.economy.currencyNamePlural());
+            Inventory fillInv = RedeemMe.getInstance().getServer().createInventory(null, InventoryType.PLAYER);
+            fillInv.setContents(player.getInventory().getContents());
+            if (!fillInv.addItem(pack.getItems().toArray(new ItemStack[0])).isEmpty() && redeemPackage) {
+                player.sendMessage(ChatColor.RED + "You don't have enough room in your inventory to redeem this package.");
+                return false;
+            }
+            player.sendMessage(ChatColor.GREEN + "This package contains the following item(s)");
+            if (pack.getMoney() != null && RedeemMe.economy != null) {
+                player.sendMessage(ChatColor.BLUE + "" + pack.getMoney() + " " + ChatColor.GOLD + RedeemMe.economy.currencyNamePlural());
                 if (redeemPackage) {
                     RedeemMe.economy.depositPlayer(player.getName(), pack.getMoney());
                 }
             }
-            if (!pack.getItems().isEmpty()) {
-                for (ItemStack item : pack.getItems()) {
-                    if (item.getItemMeta().hasDisplayName()) {
-                        player.sendMessage(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getItemMeta().getDisplayName());
-                    } else {
-                        player.sendMessage(ChatColor.GREEN + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType().toString());
+            for (ItemStack item : pack.getItems()) {
+                if (item.getItemMeta().hasDisplayName()) {
+                    player.sendMessage(ChatColor.BLUE + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getItemMeta().getDisplayName());
+                } else {
+                    player.sendMessage(ChatColor.BLUE + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType().toString());
+                }
+                if (redeemPackage) {
+                    if (RedeemMe.getInstance().strangeWeaponsEnabled() && StrangeWeapon.isStrangeWeapon(item)) {
+                        item = new StrangeWeapon(item).clone();
                     }
-                    if (redeemPackage) {
-                        if (RedeemMe.getInstance().strangeWeaponsEnabled() && StrangeWeapon.isStrangeWeapon(item)) {
-                            item = new StrangeWeapon(item).clone();
-                        }
-                        player.getInventory().addItem(item);
-                    }
+                    player.getInventory().addItem(item);
                 }
             }
-            if (!pack.getCommands().isEmpty()) {
-                for (Entry<String, Boolean> com : pack.getCommands().entrySet()) {
-                    String commandLine = com.getKey().replaceAll("<player>", player.getName());
-                    player.sendMessage(ChatColor.GREEN + "Command: " + ChatColor.GOLD + commandLine);
-                    if (redeemPackage) {
-                        CommandSender actor = player;
-                        if (com.getValue()) {
-                            actor = RedeemMe.getInstance().getServer().getConsoleSender();
-                        }
-                        RedeemMe.getInstance().getServer().dispatchCommand(actor, commandLine);
+            for (Entry<String, Boolean> com : pack.getCommands().entrySet()) {
+                String commandLine = com.getKey().replaceAll("<player>", player.getName());
+                player.sendMessage(ChatColor.BLUE + "Command: " + ChatColor.GOLD + commandLine);
+                if (redeemPackage) {
+                    CommandSender actor = player;
+                    if (com.getValue()) {
+                        actor = RedeemMe.getInstance().getServer().getConsoleSender();
                     }
+                    RedeemMe.getInstance().getServer().dispatchCommand(actor, commandLine);
                 }
             }
         } else {

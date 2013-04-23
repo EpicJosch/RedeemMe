@@ -1,12 +1,20 @@
 package to.joe.redeem;
 
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import to.joe.redeem.exception.CouponCodeAlreadyExistsException;
 import to.joe.redeem.exception.IncompletePackageException;
 
 public class PackageBuilder {
@@ -14,7 +22,7 @@ public class PackageBuilder {
     private String name = null;
     private String description = null;
     private String creator = null;
-    private Integer code = null;
+    private CouponCode code = null;
     private String player = null;
     private Double money = null;
     private List<ItemStack> items = new ArrayList<ItemStack>();
@@ -22,6 +30,9 @@ public class PackageBuilder {
     private Long embargo = null;
     private Long expiry = null;
     private String server = null;
+    private boolean alreadyBuilt = false;
+
+    private static SimpleDateFormat sdf = new SimpleDateFormat();
 
     /**
      * Sets the name of this package.
@@ -70,7 +81,7 @@ public class PackageBuilder {
         if (this.player != null) {
             throw new IncompletePackageException("Player or code already set");
         }
-        this.code = code.getID();
+        this.code = code;
         this.player = "*";
         return this;
     }
@@ -169,16 +180,164 @@ public class PackageBuilder {
 
     /**
      * Saves this package and inserts it into the database.
+     * This will throw an {@link IncompletePackageException} if it does not contain either money, an item, or a command.
+     * If you attempt to build a package that has already been built, nothing will happen.
      * 
      * @throws SQLException
+     * @throws CouponCodeAlreadyExistsException
      */
-    public void build() throws SQLException {
+    public void build() throws SQLException, CouponCodeAlreadyExistsException {
+        if (alreadyBuilt) {
+            return;
+        }
         if (this.money == null && this.items.isEmpty() && this.commands.isEmpty()) {
             throw new IncompletePackageException("Package is empty");
         }
         if (this.player == null) {
             throw new IncompletePackageException("Player or code not set");
         }
-        new Package(this.name, this.description, this.creator, this.code, this.player, this.money, this.embargo, this.expiry, this.server, this.items, this.commands);
+        Integer codeID = null;
+        if (this.code != null) {
+            this.code.save();
+            codeID = this.code.getID();
+        }
+        new Package(this.name, this.description, this.creator, codeID, this.player, this.money, this.embargo, this.expiry, this.server, this.items, this.commands);
+        alreadyBuilt = true;
     }
+
+    /**
+     * Returns an array of strings showing the details of this builder. The output is intended to be used with {@link Player#sendMessage(String[])} or similar.
+     * 
+     * @return An array of strings showing the details of this builder.
+     */
+    public String[] details() {
+        List<String> output = new ArrayList<String>();
+        if (this.name != null) {
+            output.add(ChatColor.BLUE + "Name: " + ChatColor.GOLD + this.name);
+        }
+        if (this.description != null) {
+            output.add(ChatColor.BLUE + "Description: " + ChatColor.GOLD + this.description);
+        }
+        if (this.creator != null) {
+            output.add(ChatColor.BLUE + "Given by: " + ChatColor.GOLD + this.creator);
+        }
+        if (this.server == null) {
+            output.add(ChatColor.BLUE + "Redeemable on " + ChatColor.GOLD + "all " + ChatColor.BLUE + "servers");
+        } else {
+            output.add(ChatColor.BLUE + "Redeemable on " + ChatColor.GOLD + this.server);
+        }
+        if (this.embargo != null) {
+            output.add(ChatColor.BLUE + "Available after " + ChatColor.GOLD + sdf.format(new Date(this.embargo)));
+        }
+        if (this.expiry != null) {
+            output.add(ChatColor.BLUE + "Expiring at " + ChatColor.GOLD + sdf.format(new Date(this.expiry)));
+        }
+        if (this.code != null) {
+            if (code.getRemaining() == -1) {
+                output.add(ChatColor.BLUE + "With code " + ChatColor.GOLD + this.code.getID() + ChatColor.BLUE + " with " + ChatColor.GOLD + "unlimited " + ChatColor.BLUE + "uses");
+            } else {
+                output.add(ChatColor.BLUE + "With code " + ChatColor.GOLD + this.code.getID() + ChatColor.BLUE + " with " + ChatColor.GOLD + code.getRemaining() + ChatColor.BLUE + " use(s)");
+            }
+        } else {
+            output.add(ChatColor.BLUE + "For player " + ChatColor.GOLD + this.player);
+        }
+        if (this.money == null && this.items.isEmpty() && this.commands.isEmpty()) {
+            output.add(ChatColor.RED + "Containing no items");
+        } else {
+            output.add(ChatColor.GREEN + "Containing the following item(s)");
+            if (money != null) {
+                output.add(ChatColor.BLUE + "" + this.money + " " + ChatColor.GOLD + RedeemMe.economy.currencyNamePlural());
+            }
+            for (ItemStack item : this.items) {
+                if (item.getItemMeta().hasDisplayName()) {
+                    output.add(ChatColor.BLUE + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getItemMeta().getDisplayName());
+                } else {
+                    output.add(ChatColor.BLUE + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType().toString());
+                }
+            }
+            for (Entry<String, Boolean> com : this.commands.entrySet()) {
+                String runner = com.getValue() ? "console" : "the player";
+                output.add(ChatColor.BLUE + "Command: " + ChatColor.GOLD + com.getKey() + ChatColor.BLUE + " run as " + ChatColor.GOLD + runner);
+            }
+        }
+        return output.toArray(new String[0]);
+    }
+
+    /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @return the description
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * @return the creator
+     */
+    public String getCreator() {
+        return creator;
+    }
+
+    /**
+     * @return the code
+     */
+    public CouponCode getCode() {
+        return code;
+    }
+
+    /**
+     * @return the player
+     */
+    public String getPlayer() {
+        return player;
+    }
+
+    /**
+     * @return the money
+     */
+    public Double getMoney() {
+        return money;
+    }
+
+    /**
+     * @return the items
+     */
+    public List<ItemStack> getItems() {
+        return Collections.unmodifiableList(items);
+    }
+
+    /**
+     * @return the commands
+     */
+    public Map<String, Boolean> getCommands() {
+        return Collections.unmodifiableMap(commands);
+    }
+
+    /**
+     * @return the embargo
+     */
+    public Long getEmbargo() {
+        return embargo;
+    }
+
+    /**
+     * @return the expiry
+     */
+    public Long getExpiry() {
+        return expiry;
+    }
+
+    /**
+     * @return the server
+     */
+    public String getServer() {
+        return server;
+    }
+
 }

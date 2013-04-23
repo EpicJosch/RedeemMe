@@ -12,7 +12,7 @@ import org.bukkit.entity.Player;
 
 import to.joe.redeem.exception.NonexistentCouponException;
 
-public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
+public class RedeemCommand implements CommandExecutor {
 
     private RedeemMe plugin;
 
@@ -27,7 +27,7 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
         }
         Player player = (Player) sender;
 
-        if (args.length == 1 && args[0].equalsIgnoreCase("list")) { //TODO Show pending packages
+        if (args.length == 1 && args[0].equalsIgnoreCase("list")) {
             if (Redeem.listAvailable(player)) {
                 sender.sendMessage(ChatColor.GREEN + "Type /redeem details <id> to see what the package contains");
             } else {
@@ -109,10 +109,10 @@ public class RedeemCommand implements CommandExecutor { //Gold, yellow, aqua
             return true;
         }
 
-        sender.sendMessage(ChatColor.RED + "/redeem list -> shows a list of packages you may redeem"); //Get list of packages on this server. Get list of packages on other servers. Maybe get list of future packages.
-        sender.sendMessage(ChatColor.RED + "/redeem details <number> -> shows a list of items in each package"); //Get package by id
-        sender.sendMessage(ChatColor.RED + "/redeem coupon <code> -> redeems a coupon"); //Get package by code
-        sender.sendMessage(ChatColor.RED + "/redeem <number> -> redeems a package"); //Get package by id, update package by id
+        sender.sendMessage(ChatColor.RED + "/redeem list -> shows a list of packages you may redeem");
+        sender.sendMessage(ChatColor.RED + "/redeem details <id> -> shows a list of items in each package");
+        sender.sendMessage(ChatColor.RED + "/redeem coupon <code> -> redeems a coupon");
+        sender.sendMessage(ChatColor.RED + "/redeem <id> -> redeems a package");
         return true;
     }
 }
