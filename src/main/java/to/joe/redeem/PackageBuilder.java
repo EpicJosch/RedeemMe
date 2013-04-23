@@ -32,7 +32,7 @@ public class PackageBuilder {
     private String server = null;
     private boolean alreadyBuilt = false;
 
-    private static SimpleDateFormat sdf = new SimpleDateFormat();
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     /**
      * Sets the name of this package.
