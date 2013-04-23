@@ -227,16 +227,16 @@ public class PackageBuilder {
             output.add(ChatColor.BLUE + "Redeemable on " + ChatColor.GOLD + this.server);
         }
         if (this.embargo != null) {
-            output.add(ChatColor.BLUE + "Available after " + ChatColor.GOLD + sdf.format(new Date(this.embargo)));
+            output.add(ChatColor.BLUE + "Available after " + ChatColor.GOLD + sdf.format(new Date(this.embargo * 1000)));
         }
         if (this.expiry != null) {
-            output.add(ChatColor.BLUE + "Expiring at " + ChatColor.GOLD + sdf.format(new Date(this.expiry)));
+            output.add(ChatColor.BLUE + "Expiring at " + ChatColor.GOLD + sdf.format(new Date(this.expiry * 1000)));
         }
         if (this.code != null) {
             if (code.getRemaining() == -1) {
-                output.add(ChatColor.BLUE + "With code " + ChatColor.GOLD + this.code.getID() + ChatColor.BLUE + " with " + ChatColor.GOLD + "unlimited " + ChatColor.BLUE + "uses");
+                output.add(ChatColor.BLUE + "With code " + ChatColor.GOLD + this.code.getCode() + ChatColor.BLUE + " and " + ChatColor.GOLD + "unlimited " + ChatColor.BLUE + "uses");
             } else {
-                output.add(ChatColor.BLUE + "With code " + ChatColor.GOLD + this.code.getID() + ChatColor.BLUE + " with " + ChatColor.GOLD + code.getRemaining() + ChatColor.BLUE + " use(s)");
+                output.add(ChatColor.BLUE + "With code " + ChatColor.GOLD + this.code.getCode() + ChatColor.BLUE + " and " + ChatColor.GOLD + code.getRemaining() + ChatColor.BLUE + " use(s)");
             }
         } else {
             output.add(ChatColor.BLUE + "For player " + ChatColor.GOLD + this.player);

@@ -455,7 +455,7 @@ public class CreatePackageCommand implements CommandExecutor {
                         PackageBuilder builder = (PackageBuilder) context.getSessionData("builder");
                         builder.build();
                         if (builder.getCode() != null) {
-                            context.getForWhom().sendRawMessage(ChatColor.BLUE + "Sucessfully created coupon with code " + ChatColor.GOLD + builder.getCode() + ChatColor.BLUE + "!");
+                            context.getForWhom().sendRawMessage(ChatColor.BLUE + "Sucessfully created coupon with code " + ChatColor.GOLD + builder.getCode().getCode() + ChatColor.BLUE + "!");
                         } else {
                             context.getForWhom().sendRawMessage(ChatColor.BLUE + "Sucessfully created package for " + ChatColor.GOLD + builder.getPlayer() + ChatColor.BLUE + "!");
                         }

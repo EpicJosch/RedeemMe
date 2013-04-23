@@ -55,19 +55,19 @@ public class Redeem {
 
     static boolean details(Package pack, Player player, String type, boolean redeemPackage) throws SQLException {
         if (!pack.getPlayer().equals("*") && !pack.getPlayer().equals(player.getName())) {
-            player.sendMessage(ChatColor.RED + "This " + type + " is not owned by you");
+            player.sendMessage(ChatColor.RED + "That " + type + " is not owned by you");
             return false;
         }
         if (pack.getRedeemed() != null || pack.hasAlreadyDropped(player.getName())) {
-            player.sendMessage(ChatColor.RED + "This " + type + " has been redeemed already");
+            player.sendMessage(ChatColor.RED + "That " + type + " has been redeemed already");
             return false;
         }
         if (pack.getEmbargo() != null && pack.getEmbargo() > System.currentTimeMillis() / 1000) {
-            player.sendMessage(ChatColor.RED + "This " + type + " is not yet valid");
+            player.sendMessage(ChatColor.RED + "That " + type + " is not yet valid");
             return false;
         }
         if (pack.getExpiry() != null && pack.getExpiry() < System.currentTimeMillis() / 1000) {
-            player.sendMessage(ChatColor.RED + "This " + type + " has expired");
+            player.sendMessage(ChatColor.RED + "That " + type + " has expired");
             return false;
         }
         if (pack.getName() != null) {
