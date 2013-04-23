@@ -437,41 +437,33 @@ public class CreatePackageCommand implements CommandExecutor {
 
         @Override
         public String getPromptText(ConversationContext context) {
-            try {
-                for (String msg : ((PackageBuilder) context.getSessionData("builder")).details()) {
-                    context.getForWhom().sendRawMessage(msg);
-                }
-            } catch (Throwable t) {
-                t.printStackTrace();
+            for (String msg : ((PackageBuilder) context.getSessionData("builder")).details()) {
+                context.getForWhom().sendRawMessage(msg);
             }
             return ChatColor.BLUE + "Is this information correct?";
         }
 
         @Override
         protected Prompt acceptValidatedInput(ConversationContext context, boolean input) {
-            try {
-                if (input) {
-                    try {
-                        PackageBuilder builder = (PackageBuilder) context.getSessionData("builder");
-                        builder.build();
-                        if (builder.getCode() != null) {
-                            context.getForWhom().sendRawMessage(ChatColor.BLUE + "Sucessfully created coupon with code " + ChatColor.GOLD + builder.getCode().getCode() + ChatColor.BLUE + "!");
-                        } else {
-                            context.getForWhom().sendRawMessage(ChatColor.BLUE + "Sucessfully created package for " + ChatColor.GOLD + builder.getPlayer() + ChatColor.BLUE + "!");
-                        }
-                    } catch (SQLException e) {
-                        context.getForWhom().sendRawMessage(ChatColor.RED + "There was a SQL error when creating the package. Aborting.");
-                        plugin.getLogger().log(Level.SEVERE, "Error creating coupon", e);
-                    } catch (CouponCodeAlreadyExistsException e) {
-                        context.getForWhom().sendRawMessage(ChatColor.RED + "That coupon code already exists. Aborting.");
-                    } catch (IncompletePackageException e) {
-                        context.getForWhom().sendRawMessage(ChatColor.RED + "Your package is incomplete. Make sure you have money, items, or commands. Aborting.");
+            if (input) {
+                try {
+                    PackageBuilder builder = (PackageBuilder) context.getSessionData("builder");
+                    builder.build();
+                    if (builder.getCode() != null) {
+                        context.getForWhom().sendRawMessage(ChatColor.BLUE + "Sucessfully created coupon with code " + ChatColor.GOLD + builder.getCode().getCode() + ChatColor.BLUE + "!");
+                    } else {
+                        context.getForWhom().sendRawMessage(ChatColor.BLUE + "Sucessfully created package for " + ChatColor.GOLD + builder.getPlayer() + ChatColor.BLUE + "!");
                     }
-                } else {
-                    context.getForWhom().sendRawMessage(ChatColor.RED + "Aborted package creation.");
+                } catch (SQLException e) {
+                    context.getForWhom().sendRawMessage(ChatColor.RED + "There was a SQL error when creating the package. Aborting.");
+                    plugin.getLogger().log(Level.SEVERE, "Error creating coupon", e);
+                } catch (CouponCodeAlreadyExistsException e) {
+                    context.getForWhom().sendRawMessage(ChatColor.RED + "That coupon code already exists. Aborting.");
+                } catch (IncompletePackageException e) {
+                    context.getForWhom().sendRawMessage(ChatColor.RED + "Your package is incomplete. Make sure you have money, items, or commands. Aborting.");
                 }
-            } catch (Throwable t) {
-                t.printStackTrace();
+            } else {
+                context.getForWhom().sendRawMessage(ChatColor.RED + "Aborted package creation.");
             }
             return Prompt.END_OF_CONVERSATION;
         }

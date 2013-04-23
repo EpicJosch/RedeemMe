@@ -21,6 +21,7 @@ commands:
     usage: /<command>
     permission: redeem.createpackage
     permission-message: You may not create packages
+    aliases: [newpackage]
 permissions:
   redeem.redeem:
     description: Redeem packages or coupons
