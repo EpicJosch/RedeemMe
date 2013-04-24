@@ -31,7 +31,7 @@ public class PrintCouponCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.RED + "Only players may use this command");
         }
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.RED + "Usage: /printcoupon <code>");
+            sender.sendMessage(ChatColor.RED + "Usage: /printcoupon <code> [quantity]");
             return true;
         }
         int quantity = 1;
