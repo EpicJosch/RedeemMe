@@ -72,7 +72,7 @@ public class PrintCouponCommand implements CommandExecutor {
             if (!pack.isEmpty()) {
                 lore.add(ChatColor.GREEN + "This coupon contains the following item(s)");
                 if (pack.getMoney() != null) {
-                    lore.add(ChatColor.BLUE + "" + pack.getMoney() + " " + ChatColor.GOLD + RedeemMe.economy.currencyNamePlural());
+                    lore.add(ChatColor.BLUE + "" + pack.getMoney() + " " + ChatColor.GOLD + RedeemMe.vault.getEconomy().currencyNamePlural());
                 }
                 if (!pack.getItems().isEmpty()) {
                     for (ItemStack item : pack.getItems()) {

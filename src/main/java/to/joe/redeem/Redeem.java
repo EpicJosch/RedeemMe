@@ -92,10 +92,10 @@ public class Redeem {
                 return false;
             }
             player.sendMessage(ChatColor.GREEN + "This package contains the following item(s)");
-            if (pack.getMoney() != null && RedeemMe.economy != null) {
-                player.sendMessage(ChatColor.BLUE + "" + pack.getMoney() + " " + ChatColor.GOLD + RedeemMe.economy.currencyNamePlural());
+            if (pack.getMoney() != null && RedeemMe.vault.getEconomy() != null) {
+                player.sendMessage(ChatColor.BLUE + "" + pack.getMoney() + " " + ChatColor.GOLD + RedeemMe.vault.getEconomy().currencyNamePlural());
                 if (redeemPackage) {
-                    RedeemMe.economy.depositPlayer(player.getName(), pack.getMoney());
+                    RedeemMe.vault.getEconomy().depositPlayer(player.getName(), pack.getMoney());
                 }
             }
             for (ItemStack item : pack.getItems()) {

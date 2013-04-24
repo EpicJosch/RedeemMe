@@ -94,7 +94,7 @@ public class CreatePackageCommand implements CommandExecutor {
                 ((PackageBuilder) context.getSessionData("builder")).withCreator(input);
             }
             Player player = (Player) context.getForWhom();
-            if (player.hasPermission("redeem.createpackage.money") && RedeemMe.economy != null) {
+            if (player.hasPermission("redeem.createpackage.money") && RedeemMe.vault.getEconomy() != null) {
                 return new MoneyPrompt();
             } else if (player.hasPermission("redeem.createpackage.item")) {
                 return new PreItemPrompt();

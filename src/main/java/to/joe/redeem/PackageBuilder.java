@@ -246,7 +246,7 @@ public class PackageBuilder {
         } else {
             output.add(ChatColor.GREEN + "Containing the following item(s)");
             if (money != null) {
-                output.add(ChatColor.BLUE + "" + this.money + " " + ChatColor.GOLD + RedeemMe.economy.currencyNamePlural());
+                output.add(ChatColor.BLUE + "" + this.money + " " + ChatColor.GOLD + RedeemMe.vault.getEconomy().currencyNamePlural());
             }
             for (ItemStack item : this.items) {
                 if (item.getItemMeta().hasDisplayName()) {

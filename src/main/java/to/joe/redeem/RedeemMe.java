@@ -5,8 +5,6 @@ import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.milkbowl.vault.economy.Economy;
-
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -17,25 +15,16 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import to.joe.redeem.exception.NonexistentCouponException;
 
 public class RedeemMe extends JavaPlugin implements Listener {
 
-    static Economy economy = null;
+    static VaultWrapper vault = null;
     private MySQL sql;
     private boolean strangeWeaponsEnabled = false;
     private static RedeemMe instance;
-
-    private boolean setupEconomy() {
-        RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
-        if (economyProvider != null) {
-            economy = economyProvider.getProvider();
-        }
-        return (economy != null);
-    }
 
     MySQL getMySQL() {
         return sql;
@@ -62,7 +51,8 @@ public class RedeemMe extends JavaPlugin implements Listener {
             return;
         }
 
-        if (setupEconomy()) {
+        vault = new VaultWrapper(this);
+        if (vault.setup()) {
             getLogger().info("Economy detected, money enabled");
         } else {
             getLogger().info("Economy not detected, money disabled");
