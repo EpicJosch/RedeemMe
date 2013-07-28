@@ -14,6 +14,9 @@ public class MySQL {
 
     private Connection conn;
     private RedeemMe plugin;
+    private String url;
+    private String username;
+    private String password;
 
     private void initTable(String table) throws SQLException {
         final ResultSet tableExists = conn.getMetaData().getTables(null, null, table, null);
@@ -35,6 +38,9 @@ public class MySQL {
     public MySQL(RedeemMe plugin, String url, String username, String password) throws SQLException {
         conn = DriverManager.getConnection(url, username, password);
         this.plugin = plugin;
+        this.url = url;
+        this.username = username;
+        this.password = password;
         initTable("couponcodes");
         initTable("packages");
         initTable("packageitems");
@@ -42,10 +48,18 @@ public class MySQL {
     }
 
     public PreparedStatement getFreshPreparedStatementHotFromTheOven(String query) throws SQLException {
+        if (!conn.isValid(0)) {
+            plugin.getLogger().severe("Connection to database lost, attempting to reconnect!");
+            conn = DriverManager.getConnection(url, username, password);
+        }
         return conn.prepareStatement(query);
     }
 
     public PreparedStatement getFreshPreparedStatementWithGeneratedKeys(String query) throws SQLException {
+        if (!conn.isValid(0)) {
+            plugin.getLogger().severe("Connection to database lost, attempting to reconnect!");
+            conn = DriverManager.getConnection(url, username, password);
+        }
         return conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
     }
 }
