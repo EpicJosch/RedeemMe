@@ -16,6 +16,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 
 import to.joe.redeem.exception.NonexistentCouponException;
+import to.joe.strangeweapons.meta.StrangeWeapon;
 
 /**
  * Represents a package that can be assigned to a player directly or via a coupon code.
@@ -224,6 +225,9 @@ public class Package {
 
         this.items = items;
         for (ItemStack item : items) {
+            if (RedeemMe.getInstance().strangeWeaponsEnabled() && StrangeWeapon.isStrangeWeapon(item)) {
+                item = new StrangeWeapon(item).clone();
+            }
             ps = RedeemMe.getInstance().getMySQL().getFreshPreparedStatementHotFromTheOven("INSERT INTO packageitems (id, item) VALUES (?,?)");
             ps.setInt(1, this.id);
             YamlConfiguration config = new YamlConfiguration();
