@@ -16,7 +16,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 
 import to.joe.redeem.exception.NonexistentCouponException;
-import to.joe.strangeweapons.meta.StrangeWeapon;
 
 /**
  * Represents a package that can be assigned to a player directly or via a coupon code.
@@ -25,19 +24,19 @@ import to.joe.strangeweapons.meta.StrangeWeapon;
  */
 public class Package {
 
-    private int id; //ID stored in the database
-    private String name = null; //Package name -optional-
-    private String description = null; //Package description -optional-
-    private String creator = null; //Package creator -optional-
-    private Integer code = null; //If this package was created via a coupon code, this will be set.
-    private String player = null; //Player who redeemed the package.
-    private Double money = null; //Any money to be given to the player as part of the package.
-    private List<ItemStack> items = new ArrayList<ItemStack>(); //Any itemstacks attached to this package.
-    private LinkedHashMap<String, Boolean> commands = new LinkedHashMap<String, Boolean>(); //And commands attached to this package. <String commandToRun, Boolean runAsConsole>
+    private final int id; //ID stored in the database
+    private final String name; //Package name -optional-
+    private final String description; //Package description -optional-
+    private final String creator; //Package creator -optional-
+    private Integer code; //If this package was created via a coupon code, this will be set.
+    private final String player; //Player who redeemed the package.
+    private Double money; //Any money to be given to the player as part of the package.
+    private List<ItemStack> items = new ArrayList<>(); //Any itemstacks attached to this package.
+    private LinkedHashMap<String, Boolean> commands = new LinkedHashMap<>(); //And commands attached to this package. <String commandToRun, Boolean runAsConsole>
     private Long redeemed = null; //Time this package was redeemed.
-    private Long embargo = null; //Time this package becomes enabled.
-    private Long expiry = null; //Time this package expires.
-    private String server = null; //Server this package is valid on. Null if unrestricted.
+    private Long embargo; //Time this package becomes enabled.
+    private Long expiry; //Time this package expires.
+    private final String server; //Server this package is valid on. Null if unrestricted.
 
     /**
      * Gets a map of package ids and servers of all packages that a player may redeem.
@@ -45,10 +44,9 @@ public class Package {
      * @param name
      *            The name of the player to retrieve packages for
      * @return A map of package ids and servers
-     * @throws SQLException
      */
     static LinkedHashMap<Integer, String> getAvailablePackagesByPlayerName(String name) throws SQLException { //id, server
-        LinkedHashMap<Integer, String> packages = new LinkedHashMap<Integer, String>();
+        LinkedHashMap<Integer, String> packages = new LinkedHashMap<>();
         PreparedStatement ps = RedeemMe.getInstance().getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM packages WHERE player = ? AND (expiry > ? OR expiry IS NULL) AND (? > embargo OR embargo IS NULL) AND redeemed IS NULL");
         ps.setString(1, name);
         ps.setLong(2, System.currentTimeMillis() / 1000L);
@@ -65,9 +63,6 @@ public class Package {
      * 
      * @param code
      *            The coupon code to lookup
-     * @return
-     * @throws SQLException
-     * @throws NonexistentCouponException
      */
     static int idFromCode(String code) throws SQLException, NonexistentCouponException {
         PreparedStatement ps = RedeemMe.getInstance().getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT id FROM packages WHERE code = (SELECT codeid FROM couponcodes WHERE code = ? AND (remaining > 0 OR remaining = -1))");
@@ -85,9 +80,6 @@ public class Package {
      * 
      * @param id
      *            The package id of an already existing package
-     * @throws SQLException
-     * @throws NonexistentCouponException
-     * @throws InvalidConfigurationException
      */
     Package(int id) throws SQLException, NonexistentCouponException, InvalidConfigurationException {
         this.id = id;
@@ -140,14 +132,6 @@ public class Package {
         }
     }
 
-    /**
-     * Creates a new package for api use.
-     * 
-     * @param commands2
-     * @param items2
-     * 
-     * @throws SQLException
-     */
     Package(String name, String description, String creator, Integer code, String player, Double money, Long embargo, Long expiry, String server, List<ItemStack> items, LinkedHashMap<String, Boolean> commands) throws SQLException {
         PreparedStatement ps = RedeemMe.getInstance().getMySQL().getFreshPreparedStatementWithGeneratedKeys("INSERT INTO packages (name, description, created, creator, code, player, money, embargo, expiry, server) VALUES (?,?,?,?,?,?,?,?,?,?)");
         this.name = name;
@@ -225,9 +209,6 @@ public class Package {
 
         this.items = items;
         for (ItemStack item : items) {
-            if (RedeemMe.getInstance().strangeWeaponsEnabled() && StrangeWeapon.isStrangeWeapon(item)) {
-                item = new StrangeWeapon(item).clone();
-            }
             ps = RedeemMe.getInstance().getMySQL().getFreshPreparedStatementHotFromTheOven("INSERT INTO packageitems (id, item) VALUES (?,?)");
             ps.setInt(1, this.id);
             YamlConfiguration config = new YamlConfiguration();
@@ -262,10 +243,6 @@ public class Package {
         return creator;
     }
 
-    Integer getCode() {
-        return code;
-    }
-
     String getPlayer() {
         return player;
     }
@@ -298,8 +275,8 @@ public class Package {
         return server;
     }
 
-    boolean isEmpty() {
-        return getMoney() == null && getItems().isEmpty() && getCommands().isEmpty();
+    boolean isNotEmpty() {
+        return getMoney() != null || !getItems().isEmpty() || !getCommands().isEmpty();
     }
 
     void setRedeemed(String player) throws SQLException {
@@ -316,16 +293,6 @@ public class Package {
         ps.execute();
     }
 
-    /**
-     * Checks if the specified package has already been given through a coupon
-     * 
-     * @param pack
-     *            The package to check
-     * @param player
-     *            The player to check
-     * @return True if the package has already been given
-     * @throws SQLException
-     */
     boolean hasAlreadyDropped(String player) throws SQLException {
         if (this.code == null) {
             return false;

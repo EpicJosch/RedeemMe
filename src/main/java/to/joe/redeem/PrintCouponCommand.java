@@ -3,6 +3,7 @@ package to.joe.redeem;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.logging.Level;
 
 import org.bukkit.ChatColor;
@@ -19,7 +20,7 @@ import to.joe.redeem.exception.NonexistentCouponException;
 
 public class PrintCouponCommand implements CommandExecutor {
 
-    private RedeemMe plugin;
+    private final RedeemMe plugin;
 
     public PrintCouponCommand(RedeemMe plugin) {
         this.plugin = plugin;
@@ -42,22 +43,28 @@ public class PrintCouponCommand implements CommandExecutor {
                 //Ignore
             }
         }
-        Player player = (Player) sender;
+        Player player;
+        if (sender instanceof Player) {
+            player = (Player) sender;
+        } else {
+            return true;
+        }
         try {
             ItemStack couponItem = new ItemStack(Material.PAPER, quantity);
             ItemMeta meta = couponItem.getItemMeta();
-            ArrayList<String> lore = new ArrayList<String>();
+            ArrayList<String> lore = new ArrayList<>();
             int id = Package.idFromCode(args[0].replaceAll("-", ""));
             Package pack = new Package(id);
             if (pack.getRedeemed() != null || pack.hasAlreadyDropped(player.getName())) {
                 sender.sendMessage(ChatColor.RED + "This coupon has been redeemed already");
                 return true;
             }
-            if (pack.getServer() != null && !pack.getServer().equals(player.getServer().getServerId())) {
+            if (pack.getServer() != null && !pack.getServer().equals(player.getServer().getName())) {
                 sender.sendMessage(ChatColor.RED + "This coupon is not valid on this server");
                 sender.sendMessage(ChatColor.RED + "It must be redeemed on " + pack.getServer());
                 return true;
             }
+            assert meta != null;
             if (pack.getName() == null) {
                 meta.setDisplayName(ChatColor.BLUE + "Coupon");
             } else {
@@ -69,17 +76,17 @@ public class PrintCouponCommand implements CommandExecutor {
             if (pack.getCreator() != null) {
                 lore.add(ChatColor.BLUE + "Given by: " + ChatColor.GOLD + pack.getCreator());
             }
-            if (!pack.isEmpty()) {
+            if (pack.isNotEmpty()) {
                 lore.add(ChatColor.GREEN + "This coupon contains the following item(s)");
                 if (pack.getMoney() != null) {
                     lore.add(ChatColor.BLUE + "" + pack.getMoney() + " " + ChatColor.GOLD + RedeemMe.vault.getEconomy().currencyNamePlural());
                 }
                 if (!pack.getItems().isEmpty()) {
                     for (ItemStack item : pack.getItems()) {
-                        if (item.getItemMeta().hasDisplayName()) {
+                        if (Objects.requireNonNull(item.getItemMeta()).hasDisplayName()) {
                             lore.add(ChatColor.BLUE + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getItemMeta().getDisplayName());
                         } else {
-                            lore.add(ChatColor.BLUE + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType().toString());
+                            lore.add(ChatColor.BLUE + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType());
                         }
                     }
                 }

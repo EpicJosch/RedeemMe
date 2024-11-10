@@ -2,12 +2,7 @@ package to.joe.redeem;
 
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 import org.bukkit.ChatColor;
@@ -25,75 +20,61 @@ public class PackageBuilder {
     private CouponCode code = null;
     private String player = null;
     private Double money = null;
-    private List<ItemStack> items = new ArrayList<ItemStack>();
-    private LinkedHashMap<String, Boolean> commands = new LinkedHashMap<String, Boolean>();
+    private final List<ItemStack> items = new ArrayList<>();
+    private final LinkedHashMap<String, Boolean> commands = new LinkedHashMap<>();
     private Long embargo = null;
     private Long expiry = null;
     private String server = null;
     private boolean alreadyBuilt = false;
 
-    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     /**
      * Sets the name of this package.
-     * 
-     * @param name
-     *            The name of this package
-     * @return
+     *
+     * @param name The name of this package
      */
-    public PackageBuilder withName(String name) {
+    public void withName(String name) {
         this.name = name;
-        return this;
     }
 
     /**
      * Sets the description of this package.
-     * 
-     * @param description
-     *            The description of this package
-     * @return
+     *
+     * @param description The description of this package
      */
-    public PackageBuilder withDescription(String description) {
+    public void withDescription(String description) {
         this.description = description;
-        return this;
     }
 
     /**
      * Sets the creator of this package.
-     * 
-     * @param creator
-     *            The creator of this package
-     * @return
+     *
+     * @param creator The creator of this package
      */
-    public PackageBuilder withCreator(String creator) {
+    public void withCreator(String creator) {
         this.creator = creator;
-        return this;
     }
 
     /**
      * Sets the {@link CouponCode} associated with this package.
-     * 
-     * @param code
-     *            The {@link CouponCode} for this package
-     * @return
+     *
+     * @param code The {@link CouponCode} for this package
      */
-    public PackageBuilder withCode(CouponCode code) {
+    public void withCode(CouponCode code) {
         if (this.player != null) {
             throw new IncompletePackageException("Player or code already set");
         }
         this.code = code;
         this.player = "*";
-        return this;
     }
 
     /**
      * Sets the player who is to redeem this package.
-     * 
-     * @param player
-     *            The player who will redeem this package
-     * @return
+     *
+     * @param player The player who will redeem this package
      */
-    public PackageBuilder forPlayer(String player) {
+    public void forPlayer(String player) {
         if (this.player != null) {
             throw new IncompletePackageException("Player or code already set");
         }
@@ -101,90 +82,68 @@ public class PackageBuilder {
             throw new IncompletePackageException("Player name not valid");
         }
         this.player = player;
-        return this;
     }
 
     /**
      * Sets the money included in this package.
-     * 
-     * @param money
-     *            The amount of money included
-     * @return
+     *
+     * @param money The amount of money included
      */
-    public PackageBuilder withMoney(double money) {
+    public void withMoney(double money) {
         this.money = money;
-        return this;
     }
 
     /**
      * Adds an {@link ItemStack} to this package.
-     * 
-     * @param item
-     *            The {@link ItemStack} to add
-     * @return
+     *
+     * @param item The {@link ItemStack} to add
      */
-    public PackageBuilder withItemStack(ItemStack item) {
+    public void withItemStack(ItemStack item) {
         this.items.add(item);
-        return this;
     }
 
     /**
      * Adds a command to this package.
-     * 
-     * @param command
-     *            Command to run
-     * @param runAsConsole
-     *            If the command should be run as console, otherwise player
-     * @return
+     *
+     * @param command      Command to run
+     * @param runAsConsole If the command should be run as console, otherwise player
      */
-    public PackageBuilder withCommand(String command, boolean runAsConsole) {
+    public void withCommand(String command, boolean runAsConsole) {
         this.commands.put(command, runAsConsole);
-        return this;
     }
 
     /**
      * Sets the embargo of the package. The package will not be available before this time.
-     * 
-     * @param embargo
-     *            The embargo in unix time
-     * @return
+     *
+     * @param embargo The embargo in unix time
      */
-    public PackageBuilder withEmbargo(long embargo) {
+    public void withEmbargo(long embargo) {
         this.embargo = embargo;
-        return this;
     }
 
     /**
      * Sets the expiry of the package. The package will not be available after this time.
-     * 
-     * @param expiry
-     *            The expiry in unix time
-     * @return
+     *
+     * @param expiry The expiry in unix time
      */
-    public PackageBuilder withExpiry(long expiry) {
+    public void withExpiry(long expiry) {
         this.expiry = expiry;
-        return this;
     }
 
     /**
      * Sets the server this package may be redeemed on.
-     * 
-     * @param server
-     *            The server this package may be redeemed on
-     * @return
+     *
+     * @param server The server this package may be redeemed on
      */
-    public PackageBuilder onServer(String server) {
+    public void onServer(String server) {
         this.server = server;
-        return this;
     }
 
     /**
      * Saves this package and inserts it into the database.
      * This will throw an {@link IncompletePackageException} if it does not contain either money, an item, or a command.
      * If you attempt to build a package that has already been built, nothing will happen.
-     * 
-     * @throws SQLException
-     * @throws CouponCodeAlreadyExistsException
+     *
      */
     public void build() throws SQLException, CouponCodeAlreadyExistsException {
         if (alreadyBuilt) {
@@ -211,7 +170,7 @@ public class PackageBuilder {
      * @return An array of strings showing the details of this builder.
      */
     public String[] details() {
-        List<String> output = new ArrayList<String>();
+        List<String> output = new ArrayList<>();
         if (this.name != null) {
             output.add(ChatColor.BLUE + "Name: " + ChatColor.GOLD + this.name);
         }
@@ -249,10 +208,10 @@ public class PackageBuilder {
                 output.add(ChatColor.BLUE + "" + this.money + " " + ChatColor.GOLD + RedeemMe.vault.getEconomy().currencyNamePlural());
             }
             for (ItemStack item : this.items) {
-                if (item.getItemMeta().hasDisplayName()) {
+                if (Objects.requireNonNull(item.getItemMeta()).hasDisplayName()) {
                     output.add(ChatColor.BLUE + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getItemMeta().getDisplayName());
                 } else {
-                    output.add(ChatColor.BLUE + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType().toString());
+                    output.add(ChatColor.BLUE + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType());
                 }
             }
             for (Entry<String, Boolean> com : this.commands.entrySet()) {
@@ -261,27 +220,6 @@ public class PackageBuilder {
             }
         }
         return output.toArray(new String[0]);
-    }
-
-    /**
-     * @return the name
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * @return the description
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
-     * @return the creator
-     */
-    public String getCreator() {
-        return creator;
     }
 
     /**
@@ -296,48 +234,6 @@ public class PackageBuilder {
      */
     public String getPlayer() {
         return player;
-    }
-
-    /**
-     * @return the money
-     */
-    public Double getMoney() {
-        return money;
-    }
-
-    /**
-     * @return the items
-     */
-    public List<ItemStack> getItems() {
-        return Collections.unmodifiableList(items);
-    }
-
-    /**
-     * @return the commands
-     */
-    public Map<String, Boolean> getCommands() {
-        return Collections.unmodifiableMap(commands);
-    }
-
-    /**
-     * @return the embargo
-     */
-    public Long getEmbargo() {
-        return embargo;
-    }
-
-    /**
-     * @return the expiry
-     */
-    public Long getExpiry() {
-        return expiry;
-    }
-
-    /**
-     * @return the server
-     */
-    public String getServer() {
-        return server;
     }
 
 }

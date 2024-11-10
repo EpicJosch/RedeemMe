@@ -16,15 +16,15 @@ import to.joe.redeem.exception.InvalidCouponCodeException;
 public class CouponCode {
 
     private int id;
-    private String code;
-    private int remaining;
+    private final String code;
+    private final int remaining;
 
     private static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private static Random rnd = new Random();
+    private static final Random rnd = new Random();
 
-    private static String randomString(int len) {
-        StringBuilder sb = new StringBuilder(len);
-        for (int i = 0; i < len; i++)
+    private static String randomString() {
+        StringBuilder sb = new StringBuilder(15);
+        for (int i = 0; i < 15; i++)
             sb.append(AB.charAt(rnd.nextInt(AB.length())));
         return sb.toString();
     }
@@ -53,7 +53,7 @@ public class CouponCode {
      *            The amount of this coupon that may be redeemed
      */
     public CouponCode(int remaining) {
-        this(randomString(15), remaining);
+        this(randomString(), remaining);
     }
 
     void save() throws CouponCodeAlreadyExistsException, SQLException {
@@ -75,18 +75,6 @@ public class CouponCode {
                 throw e;
             }
         }
-    }
-
-    /**
-     * Checks to see if this coupon code already exists in the database.
-     * 
-     * @return True if the code already exists
-     * @throws SQLException
-     */
-    public boolean codeExists() throws SQLException {
-        PreparedStatement ps = RedeemMe.getInstance().getMySQL().getFreshPreparedStatementHotFromTheOven("SELECT * FROM couponcodes WHERE code = ?");
-        ResultSet rs = ps.executeQuery();
-        return rs.next();
     }
 
     int getID() {

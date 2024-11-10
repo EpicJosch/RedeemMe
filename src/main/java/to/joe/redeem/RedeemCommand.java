@@ -14,7 +14,7 @@ import to.joe.redeem.exception.NonexistentCouponException;
 
 public class RedeemCommand implements CommandExecutor {
 
-    private RedeemMe plugin;
+    private final RedeemMe plugin;
 
     public RedeemCommand(RedeemMe plugin) {
         this.plugin = plugin;
@@ -24,6 +24,7 @@ public class RedeemCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage(ChatColor.RED + "Only players may use this command");
+            return true;
         }
         Player player = (Player) sender;
 
@@ -95,7 +96,7 @@ public class RedeemCommand implements CommandExecutor {
                 sender.sendMessage(ChatColor.RED + "That's not a number!");
                 return true;
             } catch (InvalidConfigurationException e) {
-                this.plugin.getLogger().log(Level.SEVERE, "Data for id " + args[1] + " is corrupted!", e);
+                this.plugin.getLogger().log(Level.SEVERE, "Data for id " + args[0] + " is corrupted!", e);
                 sender.sendMessage(ChatColor.RED + "Something went wrong!");
                 return true;
             } catch (SQLException e) {

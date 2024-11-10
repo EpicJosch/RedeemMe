@@ -1,12 +1,14 @@
 package to.joe.redeem;
 
 import java.sql.SQLException;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -23,15 +25,10 @@ public class RedeemMe extends JavaPlugin implements Listener {
 
     static VaultWrapper vault = null;
     private MySQL sql;
-    private boolean strangeWeaponsEnabled = false;
     private static RedeemMe instance;
 
     MySQL getMySQL() {
         return sql;
-    }
-
-    boolean strangeWeaponsEnabled() {
-        return strangeWeaponsEnabled;
     }
 
     static RedeemMe getInstance() {
@@ -58,18 +55,33 @@ public class RedeemMe extends JavaPlugin implements Listener {
             getLogger().info("Economy not detected, money disabled");
         }
 
-        if (getServer().getPluginManager().isPluginEnabled("StrangeWeapons")) {
-            getLogger().info("StrangeWeapons detected. Weapons will be cloned.");
-            strangeWeaponsEnabled = true;
-        }
-
-        if (getServer().getServerId().equals("unnamed")) {
+        if (getServer().getName().equals("unnamed")) {
             getLogger().warning("This server does not have an ID set!");
             getLogger().warning("Set \"server-id\" in your server.properties");
         }
-        getCommand("redeem").setExecutor(new RedeemCommand(this));
-        getCommand("printcoupon").setExecutor(new PrintCouponCommand(this));
-        getCommand("createpackage").setExecutor(new CreatePackageCommand(this));
+
+        PluginCommand redeemCommand = getCommand("redeem");
+        PluginCommand printCouponCommand = getCommand("printcoupon");
+        PluginCommand createPackageCommand = getCommand("createpackage");
+
+        if(redeemCommand != null) {
+            redeemCommand.setExecutor(new RedeemCommand(this));
+        } else {
+            this.getLogger().warning("Failed to register the redeem command!");
+        }
+
+        if(printCouponCommand != null) {
+            printCouponCommand.setExecutor(new PrintCouponCommand(this));
+        } else {
+            this.getLogger().warning("Failed to register the print coupon command!");
+        }
+
+        if(createPackageCommand != null) {
+            createPackageCommand.setExecutor(new CreatePackageCommand(this));
+        } else {
+            this.getLogger().warning("Failed to register the create package command!");
+        }
+
         getServer().getPluginManager().registerEvents(this, this);
         instance = this;
     }
@@ -93,7 +105,8 @@ public class RedeemMe extends JavaPlugin implements Listener {
         if ((event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) && event.getItem() != null && event.getItem().getType().equals(Material.PAPER) && event.getItem().hasItemMeta()) {
             ItemMeta meta = event.getItem().getItemMeta();
             Pattern p = Pattern.compile(ChatColor.RED + "Coupon code (.*)");
-            Matcher m = p.matcher(meta.getLore().get(meta.getLore().size() - 1));
+            assert meta != null;
+            Matcher m = p.matcher(Objects.requireNonNull(meta.getLore()).get(meta.getLore().size() - 1));
             if (m.matches()) {
                 Player player = event.getPlayer();
                 try {
@@ -104,19 +117,15 @@ public class RedeemMe extends JavaPlugin implements Listener {
                         getLogger().info(player.getName() + " has redeemed coupon with id " + id);
                         player.sendMessage(ChatColor.GREEN + "Coupon successfully redeemed!");
                         player.setItemInHand(null);
-                        player.updateInventory();
                     }
                 } catch (InvalidConfigurationException e) {
                     getLogger().log(Level.SEVERE, "Data for id " + m.group(1) + " is corrupted!", e);
                     player.sendMessage(ChatColor.RED + "Something went wrong!");
-                    return;
                 } catch (SQLException e) {
                     getLogger().log(Level.SEVERE, "Error getting list of things to redeem!", e);
                     player.sendMessage(ChatColor.RED + "Something went wrong!");
-                    return;
                 } catch (NonexistentCouponException e) {
                     player.sendMessage(ChatColor.RED + "That coupon does not exist!");
-                    return;
                 }
             }
         }

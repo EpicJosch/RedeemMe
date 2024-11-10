@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 import java.util.logging.Level;
 
 import org.bukkit.ChatColor;
@@ -31,8 +32,8 @@ import to.joe.redeem.exception.IncompletePackageException;
 
 public class CreatePackageCommand implements CommandExecutor {
 
-    private ConversationFactory factory;
-    private RedeemMe plugin;
+    private final ConversationFactory factory;
+    private final RedeemMe plugin;
 
     public CreatePackageCommand(RedeemMe plugin) {
         this.plugin = plugin;
@@ -58,8 +59,9 @@ public class CreatePackageCommand implements CommandExecutor {
 
         @Override
         public Prompt acceptInput(ConversationContext context, String input) {
+            assert input != null;
             if (!input.equalsIgnoreCase("none")) {
-                ((PackageBuilder) context.getSessionData("builder")).withName(input);
+                ((PackageBuilder) Objects.requireNonNull(context.getSessionData("builder"))).withName(input);
             }
             return new DescriptionPrompt();
         }
@@ -74,8 +76,9 @@ public class CreatePackageCommand implements CommandExecutor {
 
         @Override
         public Prompt acceptInput(ConversationContext context, String input) {
+            assert input != null;
             if (!input.equalsIgnoreCase("none")) {
-                ((PackageBuilder) context.getSessionData("builder")).withDescription(input);
+                ((PackageBuilder) Objects.requireNonNull(context.getSessionData("builder"))).withDescription(input);
             }
             return new CreatorPrompt();
         }
@@ -90,8 +93,9 @@ public class CreatePackageCommand implements CommandExecutor {
 
         @Override
         public Prompt acceptInput(ConversationContext context, String input) {
+            assert input != null;
             if (!input.equalsIgnoreCase("none")) {
-                ((PackageBuilder) context.getSessionData("builder")).withCreator(input);
+                ((PackageBuilder) Objects.requireNonNull(context.getSessionData("builder"))).withCreator(input);
             }
             Player player = (Player) context.getForWhom();
             if (player.hasPermission("redeem.createpackage.money") && RedeemMe.vault.getEconomy() != null) {
@@ -127,7 +131,7 @@ public class CreatePackageCommand implements CommandExecutor {
         @Override
         protected Prompt acceptValidatedInput(ConversationContext context, Number input) {
             if (input.doubleValue() > 0) {
-                ((PackageBuilder) context.getSessionData("builder")).withMoney(input.doubleValue());
+                ((PackageBuilder) Objects.requireNonNull(context.getSessionData("builder"))).withMoney(input.doubleValue());
             }
             Player player = (Player) context.getForWhom();
             if (player.hasPermission("redeem.createpackage.item")) {
@@ -168,11 +172,14 @@ public class CreatePackageCommand implements CommandExecutor {
 
         @Override
         public Prompt acceptInput(ConversationContext context, String input) {
+            assert input != null;
             if (input.equalsIgnoreCase("done")) {
                 Inventory inv = (Inventory) context.getSessionData("inventory");
                 PackageBuilder builder = ((PackageBuilder) context.getSessionData("builder"));
+                assert inv != null;
                 for (ItemStack item : inv.getContents()) {
                     if (item != null) {
+                        assert builder != null;
                         builder.withItemStack(item);
                         ((Player) context.getForWhom()).getInventory().addItem(item);
                     }
@@ -203,6 +210,7 @@ public class CreatePackageCommand implements CommandExecutor {
 
         @Override
         public Prompt acceptInput(ConversationContext context, String input) {
+            assert input != null;
             if (input.equalsIgnoreCase("done")) {
                 return new EmbargoPrompt();
             } else {
@@ -221,14 +229,14 @@ public class CreatePackageCommand implements CommandExecutor {
 
         @Override
         protected Prompt acceptValidatedInput(ConversationContext context, boolean input) {
-            ((PackageBuilder) context.getSessionData("builder")).withCommand((String) context.getSessionData("command"), input);
+            ((PackageBuilder) Objects.requireNonNull(context.getSessionData("builder"))).withCommand((String) context.getSessionData("command"), input);
             return new CommandPrompt();
         }
     }
 
     private class EmbargoPrompt extends ValidatingPrompt {
 
-        private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         @Override
         public String getPromptText(ConversationContext context) {
@@ -245,7 +253,7 @@ public class CreatePackageCommand implements CommandExecutor {
                 if (System.currentTimeMillis() > date.getTime()) {
                     return false;
                 }
-                ((PackageBuilder) context.getSessionData("builder")).withEmbargo(date.getTime() / 1000);
+                ((PackageBuilder) Objects.requireNonNull(context.getSessionData("builder"))).withEmbargo(date.getTime() / 1000);
                 return true;
             } catch (ParseException e) {
                 return false;
@@ -265,7 +273,7 @@ public class CreatePackageCommand implements CommandExecutor {
 
     private class ExpiryPrompt extends ValidatingPrompt {
 
-        private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         @Override
         public String getPromptText(ConversationContext context) {
@@ -282,7 +290,7 @@ public class CreatePackageCommand implements CommandExecutor {
                 if (System.currentTimeMillis() > date.getTime()) {
                     return false;
                 }
-                ((PackageBuilder) context.getSessionData("builder")).withExpiry(date.getTime() / 1000);
+                ((PackageBuilder) Objects.requireNonNull(context.getSessionData("builder"))).withExpiry(date.getTime() / 1000);
                 return true;
             } catch (ParseException e) {
                 return false;
@@ -309,8 +317,9 @@ public class CreatePackageCommand implements CommandExecutor {
 
         @Override
         public Prompt acceptInput(ConversationContext context, String input) {
+            assert input != null;
             if (!input.equals("*")) {
-                ((PackageBuilder) context.getSessionData("builder")).onServer(input);
+                ((PackageBuilder) Objects.requireNonNull(context.getSessionData("builder"))).onServer(input);
             }
             return new CouponPlayerPrompt();
         }
@@ -358,7 +367,7 @@ public class CreatePackageCommand implements CommandExecutor {
 
         @Override
         protected Prompt acceptValidatedInput(ConversationContext context, String input) {
-            ((PackageBuilder) context.getSessionData("builder")).forPlayer(input);
+            ((PackageBuilder) Objects.requireNonNull(context.getSessionData("builder"))).forPlayer(input);
             return new ReviewPrompt();
         }
     }
@@ -394,12 +403,13 @@ public class CreatePackageCommand implements CommandExecutor {
             return ChatColor.BLUE + "Would you like to use a " + ChatColor.GOLD + "custom " + ChatColor.BLUE + "coupon code?";
         }
 
+        @SuppressWarnings("DataFlowIssue")
         @Override
         protected Prompt acceptValidatedInput(ConversationContext context, boolean input) {
             if (input) {
                 return new CouponCodePrompt();
             } else {
-                ((PackageBuilder) context.getSessionData("builder")).withCode(new CouponCode((Integer) context.getSessionData("quantity")));
+                ((PackageBuilder) Objects.requireNonNull(context.getSessionData("builder"))).withCode(new CouponCode((Integer) context.getSessionData("quantity")));
                 return new ReviewPrompt();
             }
         }
@@ -426,9 +436,10 @@ public class CreatePackageCommand implements CommandExecutor {
             return "Invalid coupon code";
         }
 
+        @SuppressWarnings("DataFlowIssue")
         @Override
         protected Prompt acceptValidatedInput(ConversationContext context, String input) {
-            ((PackageBuilder) context.getSessionData("builder")).withCode(new CouponCode(input, (Integer) context.getSessionData("quantity")));
+            ((PackageBuilder) Objects.requireNonNull(context.getSessionData("builder"))).withCode(new CouponCode(input, (Integer) context.getSessionData("quantity")));
             return new ReviewPrompt();
         }
     }
@@ -437,7 +448,7 @@ public class CreatePackageCommand implements CommandExecutor {
 
         @Override
         public String getPromptText(ConversationContext context) {
-            for (String msg : ((PackageBuilder) context.getSessionData("builder")).details()) {
+            for (String msg : ((PackageBuilder) Objects.requireNonNull(context.getSessionData("builder"))).details()) {
                 context.getForWhom().sendRawMessage(msg);
             }
             return ChatColor.BLUE + "Is this information correct?";
@@ -448,6 +459,7 @@ public class CreatePackageCommand implements CommandExecutor {
             if (input) {
                 try {
                     PackageBuilder builder = (PackageBuilder) context.getSessionData("builder");
+                    assert builder != null;
                     builder.build();
                     if (builder.getCode() != null) {
                         context.getForWhom().sendRawMessage(ChatColor.BLUE + "Sucessfully created coupon with code " + ChatColor.GOLD + builder.getCode().getCode() + ChatColor.BLUE + "!");

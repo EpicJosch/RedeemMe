@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.logging.Level;
 
 import org.bukkit.ChatColor;
@@ -12,8 +13,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-
-import to.joe.strangeweapons.meta.StrangeWeapon;
 
 public class Redeem {
 
@@ -29,7 +28,7 @@ public class Redeem {
                 boolean packagesOtherServers = false;
                 do {
                     Entry<Integer, String> pack = iterator.next();
-                    if (pack.getValue() == null || pack.getValue().equals(RedeemMe.getInstance().getServer().getServerId())) {
+                    if (pack.getValue() == null || pack.getValue().equals(RedeemMe.getInstance().getServer().getName())) {
                         thisServer.append(pack.getKey()).append(", ");
                         packagesThisServer = true;
                     } else {
@@ -79,12 +78,12 @@ public class Redeem {
         if (pack.getCreator() != null) {
             player.sendMessage(ChatColor.BLUE + "Given by: " + ChatColor.GOLD + pack.getCreator());
         }
-        if (pack.getServer() != null && !pack.getServer().equals(player.getServer().getServerId())) {
+        if (pack.getServer() != null && !pack.getServer().equals(player.getServer().getName())) {
             player.sendMessage(ChatColor.RED + "This " + type + " is not valid on this server");
             player.sendMessage(ChatColor.RED + "It must be redeemed on " + pack.getServer());
             return false;
         }
-        if (!pack.isEmpty()) {
+        if (pack.isNotEmpty()) {
             Inventory fillInv = RedeemMe.getInstance().getServer().createInventory(null, InventoryType.PLAYER);
             fillInv.setContents(player.getInventory().getContents());
             if (!fillInv.addItem(pack.getItems().toArray(new ItemStack[0])).isEmpty() && redeemPackage) {
@@ -95,19 +94,16 @@ public class Redeem {
             if (pack.getMoney() != null && RedeemMe.vault.getEconomy() != null) {
                 player.sendMessage(ChatColor.BLUE + "" + pack.getMoney() + " " + ChatColor.GOLD + RedeemMe.vault.getEconomy().currencyNamePlural());
                 if (redeemPackage) {
-                    RedeemMe.vault.getEconomy().depositPlayer(player.getName(), pack.getMoney());
+                    RedeemMe.vault.getEconomy().depositPlayer(player, pack.getMoney());
                 }
             }
             for (ItemStack item : pack.getItems()) {
-                if (item.getItemMeta().hasDisplayName()) {
+                if (Objects.requireNonNull(item.getItemMeta()).hasDisplayName()) {
                     player.sendMessage(ChatColor.BLUE + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getItemMeta().getDisplayName());
                 } else {
-                    player.sendMessage(ChatColor.BLUE + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType().toString());
+                    player.sendMessage(ChatColor.BLUE + "" + item.getAmount() + ChatColor.GOLD + "x " + item.getType());
                 }
                 if (redeemPackage) {
-                    if (RedeemMe.getInstance().strangeWeaponsEnabled() && StrangeWeapon.isStrangeWeapon(item)) {
-                        item = new StrangeWeapon(item).clone();
-                    }
                     player.getInventory().addItem(item);
                 }
             }

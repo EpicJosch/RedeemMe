@@ -9,19 +9,20 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Objects;
 
 public class MySQL {
 
     private Connection conn;
-    private RedeemMe plugin;
-    private String url;
-    private String username;
-    private String password;
+    private final RedeemMe plugin;
+    private final String url;
+    private final String username;
+    private final String password;
 
     private void initTable(String table) throws SQLException {
         final ResultSet tableExists = conn.getMetaData().getTables(null, null, table, null);
         if (!tableExists.first()) {
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(plugin.getResource(table + ".sql")));
+            final BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(plugin.getResource(table + ".sql"))));
             final StringBuilder builder = new StringBuilder();
             String next;
             try {

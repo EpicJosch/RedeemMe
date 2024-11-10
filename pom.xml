@@ -3,76 +3,90 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>to.joe</groupId>
     <artifactId>RedeemMe</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <name>RedeemMe</name>
     <url>http://joe.to</url>
     <description>Delivers items</description>
-    
+
     <properties>
+        <maven.compiler.release>8</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-    
-    <repositories>
-        <repository>
-            <id>bukkit-repo</id>
-            <url>http://repo.bukkit.org/content/groups/public</url>
-        </repository>
-        <repository>
-            <id>vault-repo</id>
-            <url>http://ci.herocraftonline.com/plugin/repository/everything</url>
-        </repository>
-    </repositories>
-    
-     <dependencies>
-        <dependency>
-            <groupId>org.bukkit</groupId>
-            <artifactId>bukkit</artifactId>
-            <version>1.5.1-R0.2</version>
-        </dependency>
-        <dependency>
-            <groupId>net.milkbowl.vault</groupId>
-            <artifactId>Vault</artifactId>
-            <version>1.2.26-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>to.joe</groupId>
-            <artifactId>StrangeWeapons</artifactId>
-            <version>0.6.1</version>
-        </dependency>
-    </dependencies>
-    
+
     <build>
-        <finalName>${project.artifactId}</finalName>
-        
         <resources>
             <resource>
-                <targetPath>.</targetPath>
-                <filtering>true</filtering>
                 <directory>src/main/resources</directory>
-                <includes>
-                    <include>plugin.yml</include>
-                    <include>config.yml</include>
-                    <include>packages.sql</include>
-                    <include>packageitems.sql</include>
-                    <include>packagecommands.sql</include>
-                    <include>couponcodes.sql</include>
-                </includes>
+                <filtering>true</filtering>
             </resource>
         </resources>
-        
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
             </plugin>
-            
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.5.1</version>
-           </plugin>
-       </plugins>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>**/module-info.class</exclude>
+                                <exclude>META-INF/**</exclude>
+                                <exclude>INFO_BIN</exclude>
+                                <exclude>INFO_SRC</exclude>
+                                <exclude>LICENSE</exclude>
+                                <exclude>README</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
+                    <relocations>
+                    </relocations>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
+
+    <repositories>
+        <repository>
+            <id>spigot-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <version>1.20.1-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.MilkBowl</groupId>
+            <artifactId>VaultAPI</artifactId>
+            <version>1.7</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
 </project>
